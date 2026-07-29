@@ -12,17 +12,17 @@ function rotate(speed, axes = ['x', 'y', 'z']) {
 // interpolates between colors a and b and sets shader uniform value of color to the result
 function changeColor(speed = 2, a, b) {
   let elapsed = 0
-  const offset = new THREE.Vector2()
+  const offset = new THREE.Vector3()
   const vel = 0.005
-  const bound = 0.9
-  const count = 10
+  const bound = 2.0
+  const count = 32
 
   const sim = Array.from({ length: count }, () => ({
-    pos: new THREE.Vector2()
+    pos: new THREE.Vector3()
       .random()
       .subScalar(0.5)
       .multiplyScalar(2 * bound),
-    velocity: new THREE.Vector2().random().subScalar(0.5).multiplyScalar(vel),
+    velocity: new THREE.Vector3().random().subScalar(0.5).multiplyScalar(vel),
   }))
 
   return (mesh, delta) => {
@@ -37,6 +37,7 @@ function changeColor(speed = 2, a, b) {
 
       if (pos.x > bound || pos.x < -bound) velocity.x = -velocity.x
       if (pos.y > bound || pos.y < -bound) velocity.y = -velocity.y
+      if (pos.z > bound || pos.z < -bound) velocity.z = -velocity.z
 
       blobs[i].center.copy(pos)
     }

@@ -11,6 +11,16 @@ export class Camera {
     const far = 1000
     this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far)
     this.camera.position.z = 5
+
+    this.smoothMouse = new THREE.Vector2()
+    this.xTo = gsap.quickTo(this.smoothMouse, 'x', {
+      duration: 2,
+      ease: 'power4.out',
+    })
+    this.yTo = gsap.quickTo(this.smoothMouse, 'y', {
+      duration: 2,
+      ease: 'power4.out',
+    })
   }
 
   get() {
@@ -20,19 +30,7 @@ export class Camera {
   onMouseMove(mouseX, mouseY) {
     const factor = 0.25 // movement scaling factor
 
-    const xTo = gsap.quickTo(this.camera.rotation, 'x', {
-      duration: 2,
-      ease: 'power4.out',
-      overwrite: 'auto',
-    })
-
-    const yTo = gsap.quickTo(this.camera.rotation, 'y', {
-      duration: 2,
-      ease: 'power4.out',
-      overwrite: 'auto',
-    })
-
-    xTo(-mouseY * factor)
-    yTo(-mouseX * factor)
+    this.xTo(-mouseY * factor)
+    this.yTo(-mouseX * factor)
   }
 }

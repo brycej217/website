@@ -5,18 +5,22 @@ import { _VS, _FS } from './Shaders'
 const MAX_BLOBS = 32
 
 function shaderPlane(size = 50) {
+  const max = 0.25
+  const min = 0.1
+
   return new THREE.Mesh(
     new THREE.PlaneGeometry(size, size),
     new THREE.ShaderMaterial({
       uniforms: {
+        time: { value: 0 },
         color: { value: new THREE.Vector3() },
         resolution: { value: new THREE.Vector2() },
         count: { value: 0 },
         mouse: { value: new THREE.Vector2() },
         blobs: {
           value: Array.from({ length: MAX_BLOBS }, () => ({
-            center: new THREE.Vector2(),
-            radius: 0.05,
+            center: new THREE.Vector3(),
+            radius: Math.random() * (max - min) + min,
           })),
         },
       },

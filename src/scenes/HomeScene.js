@@ -19,6 +19,7 @@ export class HomeScene extends Scene {
       ),
       interactable: false,
     })
+
     /*
     // cube
     this.add('cube', cube(1, { color: new THREE.Color(0.0, 0.0, 0.5) }), {

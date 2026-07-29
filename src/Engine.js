@@ -18,6 +18,7 @@ export class Engine {
 
     // clock setup
     this.timer = new THREE.Timer()
+    this.time = 0
 
     // pointer setup
     this.pointer = new THREE.Vector2()
@@ -51,11 +52,15 @@ export class Engine {
     // get delta time since last frame (in seconds)
     this.timer.update()
     const delta = this.timer.getDelta()
+    this.time += delta
 
     if (this.needsResize()) {
       this.camera.aspect = canvas.clientWidth / client.innerHeight
       this.camera.updateProjectionMatrix()
     }
+
+    // scuffed callback
+    this.scenes['home'].get('plane').material.uniforms.time.value = this.time
 
     // render objects in scene (should be callable)
     for (const scene of Object.values(this.scenes)) {
