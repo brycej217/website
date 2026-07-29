@@ -3,6 +3,7 @@ import * as THREE from 'three'
 export class Scene {
   constructor() {
     this.objects = {}
+    this.interactables = {}
     this.scene = new THREE.Scene()
   }
 
@@ -20,20 +21,36 @@ export class Scene {
   }
 
   // registers object under a name alongside on functions
-  add(name, object, { position, animate } = {}) {
+  add(
+    name,
+    object,
+    { position, animate, hover, dehover, click, interactable = true } = {},
+  ) {
+    // register all functions
     if (position) {
       object.position.copy(position)
     }
-
     if (animate) {
       object.onAnimate = animate
+    }
+    if (hover) {
+      object.onHover = hover
+    }
+    if (dehover) {
+      object.deHover = dehover
+    }
+    if (click) {
+      object.onClick = click
+    }
+    if (interactable) {
+      this.interactables[name] = object
     }
 
     this.objects[name] = object
     this.scene.add(object)
   }
 
-  find(name) {
+  get(name) {
     return this.objects[name]
   }
 }
