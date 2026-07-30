@@ -1,10 +1,28 @@
 import * as THREE from 'three'
 
 export class Scene {
-  constructor() {
+  constructor({ position = new THREE.Vector3() } = {}) {
     this.objects = {}
     this.interactables = {}
     this.scene = new THREE.Scene()
+
+    // scene root
+    this.root = new THREE.Group()
+    this.root.position.copy(position)
+    this.scene.add(this.root)
+  }
+
+  // registers object under a name alongside on functions
+  add(name, object, { position, interactable = true, ...handlers } = {}) {
+    if (position) object.position.copy(position)
+
+    // register all functions optionally provided
+    Object.assign(object, handlers) // onAnimate, onHover, ...
+    if (interactable) this.interactables[name] = object
+
+    this.objects[name] = object
+    this.root.add(object)
+    return object
   }
 
   // calls the animation functions of all objects in scene before rendering
@@ -16,38 +34,7 @@ export class Scene {
 
   // updates all objects in scene then renders them
   onRender(renderer, camera, delta) {
-    this.onUpdate(delta)
     renderer.render(this.scene, camera)
-  }
-
-  // registers object under a name alongside on functions
-  add(
-    name,
-    object,
-    { position, animate, hover, dehover, click, interactable = true } = {},
-  ) {
-    // register all functions
-    if (position) {
-      object.position.copy(position)
-    }
-    if (animate) {
-      object.onAnimate = animate
-    }
-    if (hover) {
-      object.onHover = hover
-    }
-    if (dehover) {
-      object.deHover = dehover
-    }
-    if (click) {
-      object.onClick = click
-    }
-    if (interactable) {
-      this.interactables[name] = object
-    }
-
-    this.objects[name] = object
-    this.scene.add(object)
   }
 
   get(name) {

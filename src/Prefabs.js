@@ -1,32 +1,10 @@
 import * as THREE from 'three'
 import { Text } from 'troika-three-text'
-import { _VS, _FS } from './Shaders'
 
-const MAX_BLOBS = 32
-
-function shaderPlane(size = 50) {
-  const max = 0.25
-  const min = 0.1
-
+function plane(size = 10, { color = 'white' } = {}) {
   return new THREE.Mesh(
     new THREE.PlaneGeometry(size, size),
-    new THREE.ShaderMaterial({
-      uniforms: {
-        time: { value: 0 },
-        color: { value: new THREE.Vector3() },
-        resolution: { value: new THREE.Vector2() },
-        count: { value: 0 },
-        mouse: { value: new THREE.Vector2() },
-        blobs: {
-          value: Array.from({ length: MAX_BLOBS }, () => ({
-            center: new THREE.Vector3(),
-            radius: Math.random() * (max - min) + min,
-          })),
-        },
-      },
-      vertexShader: _VS,
-      fragmentShader: _FS,
-    }),
+    new THREE.MeshBasicMaterial({ color }),
   )
 }
 
@@ -37,14 +15,15 @@ function cube(size = 1, { color = 'white' } = {}) {
   )
 }
 
-function text(text, { fontSize = 0.5, color = 0xffffff } = {}) {
+function text(text, { fontSize = 0.5, color = 0xffffff, font } = {}) {
   const label = new Text()
   label.text = text
   label.fontSize = fontSize
   label.color = color
   label.anchorX = 'center'
+  if (font) label.font = font
   label.sync() // required after setting properties
   return label
 }
 
-export { shaderPlane, cube, text }
+export { cube, text, plane }

@@ -21,10 +21,18 @@ export class Camera {
       duration: 2,
       ease: 'power4.out',
     })
+    this.scrollTo = gsap.quickTo(this.camera.position, 'y', {
+      duration: 0.2,
+      ease: 'power1.out',
+    })
   }
 
   get() {
     return this.camera
+  }
+
+  onUpdate() {
+    window.plane.material.uniforms.scrollY.value = this.camera.position.y
   }
 
   onMouseMove(mouseX, mouseY) {
@@ -32,5 +40,22 @@ export class Camera {
 
     this.xTo(-mouseY * factor)
     this.yTo(-mouseX * factor)
+
+    window.plane.material.uniforms.mouse.value = new THREE.Vector2(
+      mouseX,
+      mouseY,
+    )
+  }
+
+  onScroll(y) {
+    const speed = 0.2
+    const newPos = (this.camera.position.y -= y * speed)
+    this.scrollTo(newPos)
+  }
+
+  // resize callback
+  resize(width, height) {
+    this.camera.aspect = width / height
+    this.camera.updateProjectionMatrix()
   }
 }

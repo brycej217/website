@@ -1,8 +1,7 @@
 import * as THREE from 'three'
 import { Scene } from './Scene'
-import { rotate, changeColor } from '../Animations'
-import { glowScale, deGlowScale } from '../Interactions'
-import { shaderPlane, text, cube } from '../Prefabs'
+import { shaderPlane, ballUpdate } from '../Shaders'
+import { text } from '../Prefabs'
 import gsap from 'gsap'
 
 export class HomeScene extends Scene {
@@ -10,41 +9,35 @@ export class HomeScene extends Scene {
     super()
 
     // background
-    this.add('plane', shaderPlane(), {
-      position: new THREE.Vector3(0, 0, -1),
-      animate: changeColor(
-        0.3,
-        new THREE.Vector3(0.1, 0.1, 1.0),
-        new THREE.Vector3(0.8, 0.8, 0.8),
-      ),
+    const plane = this.add('plane', shaderPlane(), {
+      position: new THREE.Vector3(0, 0, -1.1),
       interactable: false,
+      onAnimate: ballUpdate(),
+    })
+    window.plane = plane
+
+    // labels
+    const group = this.add('lables', new THREE.Group(), {
+      position: new THREE.Vector3(0, 1, 0),
     })
 
-    /*
-    // cube
-    this.add('cube', cube(1, { color: new THREE.Color(0.0, 0.0, 0.5) }), {
-      position: new THREE.Vector3(0, 0, 0),
-      animate: rotate(0.1, ['x', 'y']),
-      hover: glowScale(new THREE.Color('white')),
-      dehover: deGlowScale(),
-    })
+    const name = this.add(
+      'label',
+      text('BRYCE  JOSEPH', { fontSize: 1.5, font: '../../public/mr.ttf' }),
+    )
 
-    // text
-    this.add('label', text('Bryce'), {
-      position: new THREE.Vector3(0, 0, 1),
-    })
+    const desc = this.add(
+      'label',
+      text('GRAPHICS PROGRAMMER', {
+        fontSize: 0.4,
+        font: '../../public/ic.ttf',
+      }),
+      {
+        position: new THREE.Vector3(0, -1.4, 0),
+      },
+    )
 
-    const tween = gsap.to(this.get('cube').position, {
-      x: 2,
-      duration: 2,
-      ease: 'power1.out',
-      paused: true,
-    })
-    tween.play()*/
-  }
-
-  onRender(renderer, camera, delta) {
-    const speed = 0.1
-    super.onRender(renderer, camera, delta)
+    group.add(name)
+    group.add(desc)
   }
 }
