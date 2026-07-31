@@ -1,7 +1,10 @@
 import * as THREE from 'three'
 
 export class Scene {
-  constructor({ position = new THREE.Vector3() } = {}) {
+  constructor({
+    position = new THREE.Vector3(),
+    bounds = new THREE.Vector2(),
+  } = {}) {
     this.objects = {}
     this.interactables = {}
     this.scene = new THREE.Scene()
@@ -10,6 +13,9 @@ export class Scene {
     this.root = new THREE.Group()
     this.root.position.copy(position)
     this.scene.add(this.root)
+
+    // bounds
+    this.bounds = bounds
   }
 
   // registers object under a name alongside on functions
@@ -35,6 +41,14 @@ export class Scene {
   // updates all objects in scene then renders them
   onRender(renderer, camera, delta) {
     renderer.render(this.scene, camera)
+  }
+
+  onEnter() {
+    this.scene.visible = true
+  }
+
+  onExit() {
+    this.scene.visible = false
   }
 
   get(name) {

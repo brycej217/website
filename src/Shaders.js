@@ -27,6 +27,9 @@ uniform vec2 resolution;
 uniform vec2 mouse;
 uniform float scrollY;
 
+// style uniforms
+uniform vec3 color;
+
 float smin(float a, float b, float k)
 {
     float h = max(k-abs(a-b), 0.0) / k;
@@ -69,7 +72,20 @@ return normalize(v1 - v2);
 
 void main()
 {
-    vec3 a = vec3(0.97, 0.24, 0.05);
+    /*
+    vec3 a = vec3(0.97, 0.24, 0.05); // orange (original)
+    vec3 a = vec3(0.97, 0.05, 0.05); // red
+    vec3 a = vec3(0.97, 0.62, 0.05); // amber
+    vec3 a = vec3(0.97, 0.62, 0.05); // amber
+    vec3 a = vec3(0.97, 0.86, 0.05); // yellow
+    vec3 a = vec3(0.65, 0.97, 0.05); // chartreuse
+    vec3 a = vec3(0.05, 0.97, 0.24); // green
+    vec3 a = vec3(0.05, 0.97, 0.89); // teal
+    vec3 a = vec3(0.05, 0.70, 0.97); // cyan-blue
+    vec3 a = vec3(0.05, 0.35, 0.97); // blue
+    vec3 a = vec3(0.35, 0.05, 0.97); // indigo
+    vec3 a = vec3(0.97, 0.05, 0.97); // magenta
+    vec3 a = vec3(0.97, 0.05, 0.62); // pink*/
     vec3 b = vec3(0.0, 0.0, 0.0); // color within blobs
 
     vec2 uv = gl_FragCoord.xy / resolution; // [0 -> 1], center at (0.5, 0.5)
@@ -97,7 +113,7 @@ void main()
     // if surface was hit perform lighting calculations
     if (d < 0.001) 
     {
-        vec3 lightDir = vec3(cos(time), sin(time), cos(time));
+        vec3 lightDir = vec3(cos(time) * 0.5, sin(time) * 0.5, cos(time) * 0.5);
         vec3 lightCol = vec3(1.0);
         float k = 0.015;
 
@@ -113,42 +129,43 @@ void main()
         float spec = pow(max(dot(v, r), 0.0), 32.0) * k;
         float f = step(0.01, spec);
 
-        vec3 col = mix(base, vec3(1.0), f); // if f is past will return pure white
+        vec3 col = mix(b, vec3(1.0), f); // if f is past will return pure white
         gl_FragColor = vec4(col, 1.0);
     }
     else
     {
-        gl_FragColor = vec4(a, 1.0);
+        gl_FragColor = vec4(color, 1.0);
     }
 }
 `
 
-function shaderPlane(size = 50) {
-  const maxRad = 0.4
-  const minRad = 0.3
+const maxRad = 0.4
+const minRad = 0.3
 
-  return new THREE.Mesh(
-    new THREE.PlaneGeometry(size, size),
-    new THREE.ShaderMaterial({
-      uniforms: {
-        // blob uniforms
-        blobs: {
-          value: Array.from({ length: MAX_BLOBS }, () => ({
-            center: new THREE.Vector3(),
-            radius: Math.random() * (maxRad - minRad) + minRad,
-          })),
-        },
-        count: { value: 0 },
-        // engine uniforms
-        time: { value: 0 },
-        resolution: { value: new THREE.Vector2() },
-        mouse: { value: new THREE.Vector2() },
-        scrollY: { value: 0 },
-      },
-      vertexShader: _VS,
-      fragmentShader: _FS,
-    }),
-  )
+const shaderMaterial = new THREE.ShaderMaterial({
+  uniforms: {
+    // blob uniforms
+    blobs: {
+      value: Array.from({ length: MAX_BLOBS }, () => ({
+        center: new THREE.Vector3(),
+        radius: Math.random() * (maxRad - minRad) + minRad,
+      })),
+    },
+    count: { value: 0 },
+    // engine uniforms
+    time: { value: 0 },
+    resolution: { value: new THREE.Vector2() },
+    mouse: { value: new THREE.Vector2() },
+    scrollY: { value: 0 },
+    // style uniforms
+    color: { value: new THREE.Vector3() },
+  },
+  vertexShader: _VS,
+  fragmentShader: _FS,
+})
+
+function shaderPlane(size = 50) {
+  return new THREE.Mesh(new THREE.PlaneGeometry(size, size), shaderMaterial)
 }
 
 // updates ball position by calculating new position based on velocity
@@ -199,7 +216,7 @@ function ballUpdate(delta) {
   }
 }
 
-export { shaderPlane, ballUpdate }
+export { shaderPlane, shaderMaterial, ballUpdate }
 
 /*
 const meta = `

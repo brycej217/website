@@ -15,6 +15,13 @@ function cube(size = 1, { color = 'white' } = {}) {
   )
 }
 
+function circle(size = 1, { color = 'white', material } = {}) {
+  return new THREE.Mesh(
+    new THREE.CircleGeometry(size),
+    material ?? new THREE.MeshBasicMaterial({ color: color ?? 'white' }),
+  )
+}
+
 function text(text, { fontSize = 0.5, color = 0xffffff, font } = {}) {
   const label = new Text()
   label.text = text
@@ -26,4 +33,4 @@ function text(text, { fontSize = 0.5, color = 0xffffff, font } = {}) {
   return label
 }
 
-export { cube, text, plane }
+export { cube, text, plane, circle }

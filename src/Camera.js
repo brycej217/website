@@ -12,6 +12,8 @@ export class Camera {
     this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far)
     this.camera.position.z = 5
 
+    this.scrollTarget = 0
+
     this.smoothMouse = new THREE.Vector2()
     this.xTo = gsap.quickTo(this.smoothMouse, 'x', {
       duration: 2,
@@ -22,7 +24,7 @@ export class Camera {
       ease: 'power4.out',
     })
     this.scrollTo = gsap.quickTo(this.camera.position, 'y', {
-      duration: 0.2,
+      duration: 0.3,
       ease: 'power1.out',
     })
   }
@@ -32,7 +34,18 @@ export class Camera {
   }
 
   onUpdate() {
+    this.scrollTo(this.scrollTarget)
     window.plane.material.uniforms.scrollY.value = this.camera.position.y
+  }
+
+  teleport(y) {
+    gsap.killTweensOf(this.camera.position)
+    this.scrollTarget = y
+    this.camera.position.y = y
+    this.scrollTo = gsap.quickTo(this.camera.position, 'y', {
+      duration: 0.3,
+      ease: 'power1.out',
+    })
   }
 
   onMouseMove(mouseX, mouseY) {
@@ -48,9 +61,8 @@ export class Camera {
   }
 
   onScroll(y) {
-    const speed = 0.2
-    const newPos = (this.camera.position.y -= y * speed)
-    this.scrollTo(newPos)
+    const speed = 0.05
+    this.scrollTarget -= y * speed
   }
 
   // resize callback

@@ -34,11 +34,14 @@ export class Engine {
 
     // animation loop setup
     this.renderer.setAnimationLoop(() => this.update())
+    window.engine = this
   }
 
   register(name, scene) {
     this.scenes[name] = scene
     if (name === 'home') {
+      this.currScene = scene
+      this.currScene.onEnter()
       this.renderer.getDrawingBufferSize(
         window.plane.material.uniforms.resolution.value,
       )
@@ -67,11 +70,40 @@ export class Engine {
 
     // update other objects
     this.camera.onUpdate()
+
+    const y = this.camera.get().position.y
+
+    const top = this.scenes['home'].bounds.x // top of screen
+    const bottom = this.scenes['about'].bounds.y // bottom of screen
+
+    if (y < bottom) {
+      this.camera.teleport(top - 1)
+    } else if (y > top) {
+      this.camera.teleport(bottom + 1)
+    }
+
+    // check if camera has moved into new scene
+    let active = null
+    for (const scene of Object.values(this.scenes)) {
+      const { x: top, y: bottom } = scene.bounds
+      if (y <= top && y >= bottom) {
+        active = scene
+        break
+      }
+    }
+
+    if (active && active !== this.currScene) {
+      this.currScene?.onExit?.()
+      this.currScene = active
+      active.onEnter?.()
+    }
   }
 
   onScrollEvent(event) {
     event.preventDefault()
     this.camera.onScroll(event.deltaY)
+
+    window.plane.position.y = this.camera.get().position.y
   }
 
   onMouseMove(event) {
