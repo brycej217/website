@@ -1,25 +1,21 @@
 import * as THREE from 'three'
 import { Scene } from './Scene'
-import { shaderPlane, ballUpdate } from '../Shaders'
+import { Blobs } from '../Shaders'
 import { text, circle } from '../Prefabs'
-import { shaderMaterial } from '../Shaders'
 import gsap from 'gsap'
 
 export class HomeScene extends Scene {
-  constructor(opts) {
-    super(opts)
+  constructor(app, opts) {
+    super(app, opts)
 
+    // color setup
     this.color = new THREE.Vector3(0.97, 0.24, 0.05)
+    this.app.uniforms.color.value.copy(this.color) // set initial color
 
-    // background
-    const plane = this.add('plane', shaderPlane(), {
-      position: new THREE.Vector3(0, 0, -1.01),
-      interactable: false,
-      onAnimate: ballUpdate(),
-    })
-    window.plane = plane
-    this.plane = plane
-    plane.material.uniforms.color.value.copy(this.color) // set initial color
+    // blob setup
+    this.count = 32
+    this.simBound = 2.0
+    this.sim = Blobs.sim(this.count, new THREE.Vector3(0, 0, 0))
 
     // labels
     const group = this.add('lables', new THREE.Group(), {
@@ -46,9 +42,29 @@ export class HomeScene extends Scene {
     group.add(desc)
   }
 
+  blobUpdate(delta) {
+    this.elapsed += delta
+    const blobs = this.app.uniforms.blobs.value
+
+    for (let i = 0; i < this.count; ++i) {
+      const { pos, velocity } = this.sim[i]
+      pos.add(velocity)
+      if (pos.x > this.simBound || pos.x < -this.simBound)
+        velocity.x = -velocity.x
+      if (pos.y > this.simBound || pos.y < -this.simBound)
+        velocity.y = -velocity.y
+      if (pos.z > this.simBound || pos.z < -this.simBound)
+        velocity.z = -velocity.z
+
+      blobs[i].center.copy(pos)
+    }
+  }
+
   onEnter() {
     console.log('enter home')
-    gsap.to(window.plane.material.uniforms.color.value, {
+    this.app.uniforms.count.value = this.count
+    this.unregister = this.app.on('update', (delta) => this.blobUpdate(delta))
+    gsap.to(this.app.uniforms.color.value, {
       x: this.color.x,
       y: this.color.y,
       z: this.color.z,
@@ -60,5 +76,6 @@ export class HomeScene extends Scene {
 
   onExit() {
     console.log('exit home')
+    this.unregister()
   }
 }

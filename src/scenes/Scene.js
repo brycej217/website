@@ -1,55 +1,41 @@
 import * as THREE from 'three'
 
 export class Scene {
-  constructor({
-    position = new THREE.Vector3(),
-    bounds = new THREE.Vector2(),
-  } = {}) {
+  constructor(app, { position = new THREE.Vector3(), bounds } = {}) {
+    this.app = app
     this.objects = {}
     this.interactables = {}
     this.scene = new THREE.Scene()
 
     // scene root
+    this.position = position
     this.root = new THREE.Group()
     this.root.position.copy(position)
     this.scene.add(this.root)
 
     // bounds
     this.bounds = bounds
+
+    app.on('render', (renderer, camera) => this.render(renderer, camera))
   }
 
   // registers object under a name alongside on functions
-  add(name, object, { position, interactable = true, ...handlers } = {}) {
+  add(name, object, { position, interactable = true } = {}) {
     if (position) object.position.copy(position)
-
-    // register all functions optionally provided
-    Object.assign(object, handlers) // onAnimate, onHover, ...
-    if (interactable) this.interactables[name] = object
 
     this.objects[name] = object
     this.root.add(object)
     return object
   }
 
-  // calls the animation functions of all objects in scene before rendering
-  onUpdate(delta) {
-    for (const object of Object.values(this.objects)) {
-      object.onAnimate?.(object, delta)
-    }
-  }
-
   // updates all objects in scene then renders them
-  onRender(renderer, camera, delta) {
+  render(renderer, camera) {
     renderer.render(this.scene, camera)
   }
 
-  onEnter() {
-    this.scene.visible = true
-  }
+  onEnter() {}
 
-  onExit() {
-    this.scene.visible = false
-  }
+  onExit() {}
 
   get(name) {
     return this.objects[name]

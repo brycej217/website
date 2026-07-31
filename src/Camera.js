@@ -2,8 +2,9 @@ import * as THREE from 'three'
 import gsap from 'gsap'
 
 export class Camera {
-  constructor() {
+  constructor(app) {
     // camera setup
+    this.app = app
     const canvas = document.querySelector('#viewport')
     const fov = 75
     const aspect = canvas.clientWidth / canvas.clientHeight
@@ -14,15 +15,20 @@ export class Camera {
 
     this.scrollTarget = 0
 
-    this.smoothMouse = new THREE.Vector2()
-    this.xTo = gsap.quickTo(this.smoothMouse, 'x', {
-      duration: 2,
-      ease: 'power4.out',
+    // pointer setup
+    this.pointer = new THREE.Vector2()
+    this.raycaster = new THREE.Raycaster()
+
+    // app event listeners
+    app.on('update', (delta) => this.update())
+
+    // event listeners for scroll
+    this.scroll = 0
+    canvas.addEventListener('wheel', (event) => this.onScroll(event), {
+      passive: false,
     })
-    this.yTo = gsap.quickTo(this.smoothMouse, 'y', {
-      duration: 2,
-      ease: 'power4.out',
-    })
+
+    // gsap functions
     this.scrollTo = gsap.quickTo(this.camera.position, 'y', {
       duration: 0.3,
       ease: 'power1.out',
@@ -33,9 +39,28 @@ export class Camera {
     return this.camera
   }
 
-  onUpdate() {
+  update() {
     this.scrollTo(this.scrollTarget)
-    window.plane.material.uniforms.scrollY.value = this.camera.position.y
+    this.app.y = this.camera.position.y
+  }
+
+  boundsCheck(top, bottom, scenes) {
+    const y = this.camera.position.y
+    if (y < bottom) {
+      this.teleport(top - 1)
+    } else if (y > top) {
+      this.teleport(bottom + 1)
+    }
+
+    // check if camera has moved into new scene
+    for (const scene of Object.values(scenes)) {
+      if (!scene.bounds) continue
+
+      const { x: top, y: bottom } = scene.bounds
+      if (y <= top && y >= bottom) {
+        return scene
+      }
+    }
   }
 
   teleport(y) {
@@ -48,20 +73,11 @@ export class Camera {
     })
   }
 
-  onMouseMove(mouseX, mouseY) {
-    const factor = 0.25 // movement scaling factor
+  onScroll(event) {
+    event.preventDefault()
 
-    this.xTo(-mouseY * factor)
-    this.yTo(-mouseX * factor)
-
-    window.plane.material.uniforms.mouse.value = new THREE.Vector2(
-      mouseX,
-      mouseY,
-    )
-  }
-
-  onScroll(y) {
     const speed = 0.05
+    const y = event.deltaY
     this.scrollTarget -= y * speed
   }
 
