@@ -32,7 +32,9 @@ export class ProjectScene extends Scene {
       const btn = document.createElement('button')
       btn.textContent = name
       btn.className = 'project-link'
-      btn.addEventListener('click', () => this.projectClick(id))
+      btn.addEventListener('click', () =>
+        this.app.transition(this.projectClick(id)),
+      )
       list.appendChild(btn)
     }
   }

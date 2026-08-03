@@ -3,6 +3,7 @@ import { Emitter } from './Emitter'
 import { Camera } from './Camera'
 import { Blobs } from './Shaders'
 import { Scene } from './scenes/Scene'
+import { circle } from './Prefabs'
 import './style.css'
 import gsap from 'gsap'
 
@@ -31,11 +32,76 @@ export class App extends Emitter {
 
     // blob setup
     this.blobs = new Blobs(this)
-    const blobScene = new Scene(this)
-    blobScene.add('blobs', this.blobs.plane)
-    this.scenes['blobs'] = blobScene
+    const globalScene = new Scene(this)
+    globalScene.add('blobs', this.blobs.plane)
+    this.scenes['blobs'] = globalScene
     this.uniforms = this.blobs.material.uniforms
     this.renderer.getDrawingBufferSize(this.uniforms.resolution.value)
+
+    // transition setup
+    this.t1 = globalScene.add('t1', circle())
+    this.t2 = globalScene.add(
+      't2',
+      circle(1, { material: this.blobs.material }),
+    )
+    this.t2.position.z = 0.1
+    this.on('update', () => {
+      this.t1.position.y = this.getY()
+      this.t2.position.y = this.getY()
+    })
+    this.t1.visible = false
+    this.t2.visible = false
+  }
+
+  transition(callback) {
+    this.tl?.kill()
+
+    this.tl = gsap.timeline({
+      onComplete: () => {
+        this.t1.visible = false
+        this.t2.visible = false
+        this.t1.scale.set(0.01, 0.01, 0.01)
+        this.t2.scale.set(0.01, 0.01, 0.01)
+      },
+    })
+
+    // starting state
+    this.t1.scale.set(0.01, 0.01, 0.01)
+    this.t2.scale.set(0.01, 0.01, 0.01)
+    this.t1.visible = true
+    this.t2.visible = false
+
+    // phase 1: t1 grows to cover
+    this.tl.to(this.t1.scale, {
+      x: 10,
+      y: 10,
+      z: 10,
+      duration: 1,
+      ease: 'power3.out',
+    })
+
+    // swap content once t1 has covered enough
+    this.tl.call(
+      () => {
+        callback?.()
+        this.t2.visible = true
+      },
+      null,
+      0.6,
+    ) // absolute time 0.5s
+
+    // phase 2: t2 grows
+    this.tl.to(
+      this.t2.scale,
+      {
+        x: 10,
+        y: 10,
+        z: 10,
+        duration: 1,
+        ease: 'power3.out',
+      },
+      0.6,
+    ) // absolute time 0.5s
   }
 
   register(name, scene) {
