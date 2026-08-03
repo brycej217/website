@@ -3,6 +3,7 @@ import { App } from './App'
 import { HomeScene } from './scenes/HomeScene'
 import { ProjectScene } from './scenes/ProjectScene'
 import { AboutScene } from './scenes/AboutScene'
+import { WorldHtml } from './WorldHtml'
 
 const app = new App()
 
@@ -18,6 +19,8 @@ const aboutScene = new AboutScene(app, {
   position: new THREE.Vector3(0.0, -30.0, 0.0),
   bounds: new THREE.Vector2(-25.0, -40.0),
 })
+
+const worldHtml = new WorldHtml(app)
 
 app.register('home', homeScene)
 app.register('project', projectScene)

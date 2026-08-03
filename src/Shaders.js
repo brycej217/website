@@ -37,7 +37,8 @@ export class Blobs {
 
   update(delta) {
     this.material.uniforms.time.value = this.app.time
-    const y = this.app.camera.get().position.y
+
+    const y = this.app.getY()
     this.material.uniforms.scrollY.value = y
     this.plane.position.y = y
   }

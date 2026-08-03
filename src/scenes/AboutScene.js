@@ -13,7 +13,10 @@ export class AboutScene extends Scene {
     // blob setup
     this.count = 5
     this.simBound = 2.0
-    this.sim = Blobs.sim(this.count, this.position)
+    this.sim = Blobs.sim(
+      this.count,
+      this.position.sub(new THREE.Vector3(0, 2.5, 0)),
+    )
   }
 
   blobUpdate(delta) {

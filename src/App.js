@@ -98,4 +98,9 @@ export class App extends Emitter {
       this.renderer.getDrawingBufferSize(this.uniforms.resolution.value)
     }
   }
+
+  // helper camera position getter
+  getY() {
+    return this.camera.get().position.y
+  }
 }

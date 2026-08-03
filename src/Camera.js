@@ -24,7 +24,7 @@ export class Camera {
 
     // event listeners for scroll
     this.scroll = 0
-    canvas.addEventListener('wheel', (event) => this.onScroll(event), {
+    window.addEventListener('wheel', (event) => this.onScroll(event), {
       passive: false,
     })
 
@@ -41,7 +41,6 @@ export class Camera {
 
   update() {
     this.scrollTo(this.scrollTarget)
-    this.app.y = this.camera.position.y
   }
 
   boundsCheck(top, bottom, scenes) {

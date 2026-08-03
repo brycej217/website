@@ -43,12 +43,14 @@ export class ProjectScene extends Scene {
       p -= 2
     }
 
+    /*
     const name = document.createElement('h1')
     name.textContent = 'BRYCE JOSEPH'
     name.className = 'hero-name'
     name.style.display = 'none'
     document.querySelector('#overlay').appendChild(name)
     this.name = name
+    */
 
     /*
     const link = document.createElement('a')
@@ -99,12 +101,10 @@ export class ProjectScene extends Scene {
       ease: 'power4.out',
       overwrite: 'auto',
     })
-    this.name.style.display = 'block'
   }
 
   onExit() {
     console.log('project exit')
-    this.name.style.display = 'none'
     this.unregister()
   }
 }
