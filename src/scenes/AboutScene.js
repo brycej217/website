@@ -15,7 +15,7 @@ export class AboutScene extends Scene {
     this.simBound = 2.0
     this.sim = Blobs.sim(
       this.count,
-      this.position.sub(new THREE.Vector3(0, 2.5, 0)),
+      this.position.sub(new THREE.Vector3(0, 0, 0)),
     )
   }
 

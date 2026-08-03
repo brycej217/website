@@ -14,6 +14,16 @@ export class PageManager {
 
     const back = document.querySelector('#back')
     back.addEventListener('click', () => this.close())
+
+    // teleport buttons
+    const navTargets = { home: 0, projects: -10, about: -30 }
+    for (const [id, y] of Object.entries(navTargets)) {
+      document.querySelector(`#${id}`)?.addEventListener('click', (e) => {
+        e.preventDefault()
+        this.close()
+        this.app.camera.teleport(y)
+      })
+    }
   }
 
   open(id) {
