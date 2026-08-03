@@ -205,3 +205,50 @@ body {
 .page-link:hover {
   border-color: currentColor;
 }
+
+/* project list buttons */
+.project-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-start;
+  margin-top: 1rem;
+}
+.project-link {
+  font-family: 'IC', sans-serif;
+  font-size: 1.75rem;
+  color: white;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  border-bottom: 1px solid transparent;
+  transition:
+    border-color 0.3s,
+    transform 0.3s;
+  cursor: pointer;
+}
+.project-link:hover {
+  border-color: currentColor;
+  transform: translateX(6px);
+}
+
+/* back button — top-left of the page area */
+.back-btn {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  font-family: 'MR', sans-serif;
+  font-size: 2.5rem;
+  line-height: 1;
+  color: white;
+  background: none;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  transition: transform 0.3s;
+  pointer-events: auto;
+}
+.back-btn:hover {
+  transform: translateX(-6px); /* slides left, reinforcing "back" */
+}

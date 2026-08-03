@@ -5,11 +5,11 @@ import { plane, text, circle } from '../Prefabs'
 import gsap from 'gsap'
 
 const projects = [
-  'Vulkan Engine',
-  'glRemix',
-  'NPTracer',
-  'CUDA Path Tracer',
-  'Clustered Renderer',
+  { id: 'vulkan-engine', name: 'Vulkan Engine' },
+  { id: 'glremix', name: 'glRemix' },
+  { id: 'nptracer', name: 'NPTracer' },
+  { id: 'cuda-path-tracer', name: 'CUDA Path Tracer' },
+  { id: 'clustered-renderer', name: 'Clustered Renderer' },
 ]
 
 const otherProjects = ['CUDA Boids', 'CUDA Stream Compaction', 'This Website']
@@ -26,26 +26,15 @@ export class ProjectScene extends Scene {
     this.simBound = 2.0
     this.sim = Blobs.sim(this.count, this.position)
 
-    // scene setup
-    let p = this.position.y + 10
-    for (const n of projects) {
-      this.add(
-        `${n}`,
-        text(n, {
-          fontSize: 1.0,
-          font: '/ic.ttf',
-          color: new THREE.Color('white'),
-        }),
-        {
-          position: new THREE.Vector3(0.0, p, 0),
-        },
-      )
-      p -= 2
+    // projects
+    const list = document.querySelector('#project-list')
+    for (const { id, name } of projects) {
+      const btn = document.createElement('button')
+      btn.textContent = name
+      btn.className = 'project-link'
+      btn.addEventListener('click', () => this.projectClick(id))
+      list.appendChild(btn)
     }
-
-    // html setup
-    const test = document.querySelector('#test')
-    test.addEventListener('click', () => this.projectClick('vulkan-engine'))
   }
 
   projectClick(id) {
