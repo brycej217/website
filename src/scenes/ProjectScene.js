@@ -43,30 +43,19 @@ export class ProjectScene extends Scene {
       p -= 2
     }
 
-    /*
-    const name = document.createElement('h1')
-    name.textContent = 'BRYCE JOSEPH'
-    name.className = 'hero-name'
-    name.style.display = 'none'
-    document.querySelector('#overlay').appendChild(name)
-    this.name = name
-    */
+    // html setup
+    const test = document.querySelector('#test')
+    test.addEventListener('click', () => this.projectClick('vulkan-engine'))
+  }
 
-    /*
-    const link = document.createElement('a')
-    link.textContent = 'Vulkan Engine'
-    link.href = 'https://threejs.org/docs/#Vector3.project'
-    link.target = '_blank'
-    link.rel = 'noopener'
-    link.className = 'project-link'
-    document.querySelector('#overlay').appendChild(link)*/
+  projectClick(id) {
+    console.log('clicked')
 
-    /*
-    const link2 = document.createElement('button')
-    link2.textContent = 'Vulkan Engine'
-    link2.className = 'project-link'
-    link2.addEventListener('click', () => {})
-    document.querySelector('#overlay').appendChild(link2)*/
+    // transition
+
+    // teleport camera to the start
+    this.onExit()
+    this.app.pages.open(id)
   }
 
   blobUpdate(delta) {

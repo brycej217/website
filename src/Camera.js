@@ -51,6 +51,8 @@ export class Camera {
       this.teleport(bottom + 1)
     }
 
+    if (!scenes) return
+
     // check if camera has moved into new scene
     for (const scene of Object.values(scenes)) {
       if (!scene.bounds) continue

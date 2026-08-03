@@ -4,6 +4,7 @@ import { HomeScene } from './scenes/HomeScene'
 import { ProjectScene } from './scenes/ProjectScene'
 import { AboutScene } from './scenes/AboutScene'
 import { WorldHtml } from './WorldHtml'
+import { PageManager } from './PageManager'
 
 const app = new App()
 
@@ -21,6 +22,7 @@ const aboutScene = new AboutScene(app, {
 })
 
 const worldHtml = new WorldHtml(app)
+const pageManager = new PageManager(app)
 
 app.register('home', homeScene)
 app.register('project', projectScene)

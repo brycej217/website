@@ -63,6 +63,15 @@ export class App extends Emitter {
     // emit render event
     this.emit('render', this.renderer, this.camera.get())
 
+    // if in project view do not perform alternative bounds checking
+    if (this.inProject) {
+      const top = -90 // top of screen
+      const bottom = -125 // bottom of screen
+
+      this.camera.boundsCheck(top, bottom, null)
+      return
+    }
+
     // check if entered new scene
     const top = this.scenes['home'].bounds.x // top of screen
     const bottom = this.scenes['about'].bounds.y // bottom of screen
