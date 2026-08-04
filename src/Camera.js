@@ -63,10 +63,13 @@ export class Camera {
     const hits = this.raycaster.intersectObjects(interactables, true)
 
     let hit = null
-    if (hits.length) {
-      let obj = hits[0].object
+    for (const rayHit of hits) {
+      let obj = rayHit.object
       while (obj && !interactables.includes(obj)) obj = obj.parent
-      hit = obj
+      if (obj) {
+        hit = obj
+        break
+      }
     }
 
     // hover logic

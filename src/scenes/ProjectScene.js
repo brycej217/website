@@ -48,12 +48,6 @@ export class ProjectScene extends Scene {
       list.appendChild(btn)
     }*/
 
-    // testers
-    this.box = this.add('label', cube(1, { color: 'white' }))
-    this.box.onHover = () => scaleHover(this.box)
-    this.box.onDehover = () => scaleDehover(this.box)
-    this.box.onClick = () => console.log('box clicked')
-
     // project cards
     this.cards = []
     const cols = 3
@@ -112,10 +106,6 @@ export class ProjectScene extends Scene {
   }
 
   projectClick(id) {
-    console.log('clicked')
-
-    // transition
-
     // teleport camera to the start
     this.onExit()
     this.app.pages.open(id)
@@ -137,9 +127,6 @@ export class ProjectScene extends Scene {
 
       blobs[i].center.copy(pos)
     }
-    this.box.position
-      .set(this.sim[0].pos.x, this.sim[0].pos.y, 0)
-      .sub(this.root.position)
   }
 
   onEnter() {

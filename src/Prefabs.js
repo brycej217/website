@@ -42,6 +42,19 @@ function projectCard(
   text.sync()
   group.add(text)
 
+  // transparent hit plane covering the full card
+  const hitH = height + 0.1 + fontSize
+  const hitPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(width, hitH),
+    new THREE.MeshBasicMaterial({
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    }),
+  )
+  hitPlane.position.set(0, -(0.1 + fontSize) / 2, 0.02)
+  group.add(hitPlane)
+
   return group
 }
 

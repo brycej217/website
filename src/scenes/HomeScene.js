@@ -25,6 +25,7 @@ export class HomeScene extends Scene {
     const name = this.add(
       'label',
       text('BRYCE  JOSEPH', { fontSize: 1.5, font: '/mr.ttf' }),
+      { interactable: false },
     )
 
     const desc = this.add(
@@ -35,6 +36,7 @@ export class HomeScene extends Scene {
       }),
       {
         position: new THREE.Vector3(0, -1.4, 0),
+        interactable: false,
       },
     )
 
