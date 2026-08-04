@@ -28,6 +28,10 @@ export class Camera {
       passive: false,
     })
 
+    // event listeners for mouse
+    window.addEventListener('mousemove', (event) => this.onMouseMove(event))
+    window.addEventListener('mousedown', (event) => this.onMouseDown(event))
+
     // gsap functions
     this.scrollTo = gsap.quickTo(this.camera.position, 'y', {
       duration: 0.3,
@@ -41,6 +45,40 @@ export class Camera {
 
   update() {
     this.scrollTo(this.scrollTarget)
+  }
+
+  onMouseDown(event) {
+    if (this.hovered) {
+      this.hovered.onClick?.()
+    }
+  }
+
+  onMouseMove(event) {
+    // mouse -> NDC [-1, 1]
+    this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1
+    this.pointer.y = -((event.clientY / window.innerHeight) * 2 - 1)
+
+    this.raycaster.setFromCamera(this.pointer, this.camera)
+    const interactables = this.app.interactables ?? []
+    const hits = this.raycaster.intersectObjects(interactables, true)
+
+    let hit = null
+    if (hits.length) {
+      let obj = hits[0].object
+      while (obj && !interactables.includes(obj)) obj = obj.parent
+      hit = obj
+    }
+
+    // hover logic
+    if (this.hovered !== hit) // if hovering new object or dehovering
+    {
+      this.hovered?.onDehover?.()
+      this.hovered = hit
+      this.hovered?.onHover?.()
+    }
+    document.querySelector('#viewport').style.cursor = hit
+      ? 'pointer'
+      : 'default'
   }
 
   boundsCheck(top, bottom, scenes) {

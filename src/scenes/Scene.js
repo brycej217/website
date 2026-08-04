@@ -25,6 +25,7 @@ export class Scene {
 
     this.objects[name] = object
     this.root.add(object)
+    this.app.interactables.push(object)
     return object
   }
 

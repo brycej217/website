@@ -61,7 +61,6 @@ export class HomeScene extends Scene {
   }
 
   onEnter() {
-    console.log('enter home')
     this.app.uniforms.count.value = this.count
     this.unregister = this.app.on('update', (delta) => this.blobUpdate(delta))
     gsap.to(this.app.uniforms.color.value, {
@@ -75,7 +74,6 @@ export class HomeScene extends Scene {
   }
 
   onExit() {
-    console.log('exit home')
     this.unregister()
   }
 }

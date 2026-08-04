@@ -1,15 +1,24 @@
 import * as THREE from 'three'
 import { Scene } from './Scene'
 import { Blobs } from '../Shaders'
-import { plane, text, circle } from '../Prefabs'
+import { plane, text, circle, cube, projectCard } from '../Prefabs'
+import { scaleHover, scaleDehover } from './Animations'
 import gsap from 'gsap'
 
 const projects = [
-  { id: 'vulkan-engine', name: 'Vulkan Engine' },
-  { id: 'glremix', name: 'glRemix' },
-  { id: 'nptracer', name: 'NPTracer' },
-  { id: 'cuda-path-tracer', name: 'CUDA Path Tracer' },
-  { id: 'clustered-renderer', name: 'Clustered Renderer' },
+  { id: 'vulkan-engine', name: 'Vulkan Engine', image: '/test.jpg' },
+  { id: 'glremix', name: 'glRemix', image: '/test.jpg' },
+  { id: 'nptracer', name: 'NPTracer', image: '/test.jpg' },
+  {
+    id: 'cuda-path-tracer',
+    name: 'CUDA Path Tracer',
+    image: '/test.jpg',
+  },
+  {
+    id: 'clustered-renderer',
+    name: 'Clustered Renderer',
+    image: '/test.jpg',
+  },
 ]
 
 const otherProjects = ['CUDA Boids', 'CUDA Stream Compaction', 'This Website']
@@ -27,6 +36,7 @@ export class ProjectScene extends Scene {
     this.sim = Blobs.sim(this.count, this.position)
 
     // projects
+    /*
     const list = document.querySelector('#project-list')
     for (const { id, name } of projects) {
       const btn = document.createElement('button')
@@ -36,6 +46,68 @@ export class ProjectScene extends Scene {
         this.app.transition(this.projectClick(id)),
       )
       list.appendChild(btn)
+    }*/
+
+    // testers
+    this.box = this.add('label', cube(1, { color: 'white' }))
+    this.box.onHover = () => scaleHover(this.box)
+    this.box.onDehover = () => scaleDehover(this.box)
+    this.box.onClick = () => console.log('box clicked')
+
+    // project cards
+    this.cards = []
+    const cols = 3
+    const spacingX = 2.6
+    const spacingY = 2.2
+    const startX = -((cols - 1) * spacingX) / 2
+
+    projects.forEach((proj, i) => {
+      const card = this.add(
+        proj.id,
+        projectCard(proj.image, proj.name, { font: '/ic.ttf' }),
+      )
+
+      const col = i % cols
+      const row = Math.floor(i / cols)
+      const gx = startX + col * spacingX
+      const gy = this.position.y + 2 - row * spacingY
+      card.position.set(gx, gy, 0).sub(this.root.position)
+
+      card.userData.home = new THREE.Vector3(gx, gy, 0).sub(this.root.position)
+      card.userData.phase = new THREE.Vector2(
+        Math.random() * Math.PI * 2,
+        Math.random() * Math.PI * 2,
+      )
+      card.userData.freq = new THREE.Vector2(
+        0.5 + Math.random() * 0.5,
+        0.5 + Math.random() * 0.5,
+      )
+      card.userData.amp = 0.15 + Math.random() * 0.1
+
+      // hover/click
+      card.userData.baseScale = card.scale.clone()
+      card.onHover = () => scaleHover(card)
+      card.onDehover = () => scaleDehover(card)
+      card.onClick = () => this.app.transition(() => this.projectClick(proj.id))
+
+      this.cards.push(card)
+    })
+
+    this.unregisterDrift = this.app.on('update', (delta) =>
+      this.cardUpdate(delta),
+    )
+  }
+
+  cardUpdate(delta) {
+    this.cardElapsed = (this.cardElapsed ?? 0) + delta
+    const t = this.cardElapsed
+
+    for (const card of this.cards) {
+      const { home, phase, freq, amp } = card.userData
+
+      // small elliptical drift around the grid position
+      card.position.x = home.x + Math.sin(t * freq.x + phase.x) * amp
+      card.position.y = home.y + Math.cos(t * freq.y + phase.y) * amp
     }
   }
 
@@ -65,10 +137,12 @@ export class ProjectScene extends Scene {
 
       blobs[i].center.copy(pos)
     }
+    this.box.position
+      .set(this.sim[0].pos.x, this.sim[0].pos.y, 0)
+      .sub(this.root.position)
   }
 
   onEnter() {
-    console.log('project enter')
     // blob updates
     this.app.uniforms.count.value = this.count
     this.unregister = this.app.on('update', (delta) => this.blobUpdate(delta))
@@ -84,7 +158,6 @@ export class ProjectScene extends Scene {
   }
 
   onExit() {
-    console.log('project exit')
     this.unregister()
   }
 }

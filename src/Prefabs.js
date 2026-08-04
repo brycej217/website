@@ -1,6 +1,50 @@
 import * as THREE from 'three'
 import { Text } from 'troika-three-text'
 
+const loader = new THREE.TextureLoader()
+
+function projectCard(
+  imageUrl,
+  label,
+  { width = 2, height = 1.4, font, fontSize = 0.25 } = {},
+) {
+  const group = new THREE.Group()
+
+  // image plane
+  const geo = new THREE.PlaneGeometry(width, height)
+  const mat = new THREE.MeshBasicMaterial({ color: 'white' })
+  const mesh = new THREE.Mesh(geo, mat)
+  group.add(mesh)
+
+  // load texture async
+  loader.load(
+    imageUrl,
+    (tex) => {
+      tex.colorSpace = THREE.SRGBColorSpace // correct color for photos
+      mat.map = tex
+      mat.needsUpdate = true
+    },
+    undefined,
+    () => {
+      // load error
+    },
+  )
+
+  // text label
+  const text = new Text()
+  text.text = label
+  text.fontSize = fontSize
+  text.color = 0xffffff
+  text.anchorX = 'center'
+  text.anchorY = 'top'
+  text.position.set(0, -height / 2 - 0.1, 0.01) // just below the plane, slightly forward
+  if (font) text.font = font
+  text.sync()
+  group.add(text)
+
+  return group
+}
+
 function plane(size = 10, { color = 'white' } = {}) {
   return new THREE.Mesh(
     new THREE.PlaneGeometry(size, size),
@@ -33,4 +77,4 @@ function text(text, { fontSize = 0.5, color = 0xffffff, font } = {}) {
   return label
 }
 
-export { cube, text, plane, circle }
+export { cube, text, plane, circle, projectCard }

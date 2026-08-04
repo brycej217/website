@@ -38,7 +38,6 @@ export class AboutScene extends Scene {
   }
 
   onEnter() {
-    console.log('enter about')
     this.unregister = this.app.on('update', (delta) => this.blobUpdate(delta))
     gsap.to(this.app.uniforms.color.value, {
       x: this.color.x,
@@ -51,7 +50,6 @@ export class AboutScene extends Scene {
   }
 
   onExit() {
-    console.log('exit about')
     this.unregister()
   }
 }

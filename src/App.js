@@ -22,6 +22,7 @@ export class App extends Emitter {
 
     // scene registry setup
     this.scenes = {}
+    this.interactables = []
 
     // clock setup
     this.timer = new THREE.Timer()
@@ -39,7 +40,10 @@ export class App extends Emitter {
     this.renderer.getDrawingBufferSize(this.uniforms.resolution.value)
 
     // transition setup
-    this.t1 = globalScene.add('t1', circle())
+    this.t1 = globalScene.add(
+      't1',
+      circle(1, { color: new THREE.Color('black') }),
+    )
     this.t2 = globalScene.add(
       't2',
       circle(1, { material: this.blobs.material }),
