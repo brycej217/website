@@ -59,15 +59,18 @@ export class App extends Emitter {
     this.transitionMat.uniforms.scrollY.value = destY ?? this.getY()
 
     // find the scene that owns destY so we can read its final color
-    const destScene = destY !== null
-      ? Object.values(this.scenes).find(
-          (s) => s.bounds && s.color && destY <= s.bounds.x && destY >= s.bounds.y,
-        )
-      : null
+    const destScene =
+      destY !== null
+        ? Object.values(this.scenes).find(
+            (s) =>
+              s.bounds && s.color && destY <= s.bounds.x && destY >= s.bounds.y,
+          )
+        : null
 
     // resolve destination color: explicit override (e.g. a project's own color) >
     // the scene that owns destY > whatever color is currently showing
-    const targetColor = destColor ?? (destScene ? destScene.color : this.uniforms.color.value)
+    const targetColor =
+      destColor ?? (destScene ? destScene.color : this.uniforms.color.value)
 
     // immediately snap the circle to the destination color (no gsap)
     this.transitionMat.uniforms.color.value.copy(targetColor)
@@ -78,27 +81,73 @@ export class App extends Emitter {
     this.tl = gsap.timeline()
 
     // world HTML fades out immediately so the positional snap is invisible
-    this.tl.to(this.htmlOverlay, { opacity: 0, duration: 0.25, ease: 'power2.out' }, 0)
+    this.tl.to(
+      this.htmlOverlay,
+      { opacity: 0, duration: 0.25, ease: 'power2.out' },
+      0,
+    )
+
+    // current scene's objects fade out alongside the html — a touch slower and
+    // gentler than the html fade so it reads as a fade rather than a snap
+    if (this.currScene) {
+      this.tl.to(
+        this.currScene,
+        { opacity: 0, duration: 0.3, ease: 'power1.out' },
+        0,
+      )
+    }
 
     // circle expands from center revealing destination
-    this.tl.to(this.tc.scale, { x: 10, y: 10, z: 10, duration: 0.7, ease: 'power3.out' }, 0)
+    this.tl.to(
+      this.tc.scale,
+      { x: 10, y: 10, z: 10, duration: 0.7, ease: 'power3.out' },
+      0,
+    )
 
     // swap camera / scene at peak coverage
-    this.tl.call(() => {
-      callback?.()
-      this.transitionMat.uniforms.scrollY.value = this.getY()
-    }, null, 0.45)
+    this.tl.call(
+      () => {
+        callback?.()
+        this.transitionMat.uniforms.scrollY.value = this.getY()
+        // hide the destination scene's objects until they're revealed behind
+        // the shrinking circle, so the fade-in below has something to animate from
+        if (destScene) destScene.opacity = 0
+      },
+      null,
+      0.45,
+    )
 
     // hide circle — snap main color to destination first so there is no color pop
-    this.tl.call(() => {
-      gsap.killTweensOf(this.uniforms.color.value)
-      this.uniforms.color.value.copy(this.transitionMat.uniforms.color.value)
-      this.tc.visible = false
-      this.tc.scale.set(0.01, 0.01, 0.01)
-    }, null, 0.7)
+    this.tl.call(
+      () => {
+        gsap.killTweensOf(this.uniforms.color.value)
+        this.uniforms.color.value.copy(this.transitionMat.uniforms.color.value)
+        this.tc.visible = false
+        this.tc.scale.set(0.01, 0.01, 0.01)
+      },
+      null,
+      0.7,
+    )
 
     // world HTML fades back in to reveal destination content
-    this.tl.to(this.htmlOverlay, { opacity: 1, duration: 0.3, ease: 'power2.in' }, 0.65)
+    this.tl.to(
+      this.htmlOverlay,
+      { opacity: 1, duration: 0.3, ease: 'power2.in' },
+      0.65,
+    )
+
+    // destination scene's objects fade back in. Starts earlier than the html
+    // (while still hidden behind the circle) and uses an ease-out curve so most
+    // of the opacity change happens while masked — by the time the circle is
+    // gone at 0.7 the cards are already mostly visible, so it reads as a real
+    // cross-fade instead of popping in over the mask's last few frames
+    if (destScene) {
+      this.tl.to(
+        destScene,
+        { opacity: 1, duration: 0.3, ease: 'power2.in' },
+        0.65,
+      )
+    }
   }
 
   register(name, scene) {

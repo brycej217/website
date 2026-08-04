@@ -9,31 +9,31 @@ const projects = [
   {
     id: 'vulkan-engine',
     name: 'Vulkan Engine',
-    image: '/test.jpg',
+    image: '/glremix.png',
     color: new THREE.Vector3(0.05, 0.7, 0.97), // cyan-blue
   },
   {
     id: 'glremix',
     name: 'glRemix',
-    image: '/test.jpg',
+    image: '/glremix.png',
     color: new THREE.Vector3(0.05, 0.97, 0.89), // teal
   },
   {
     id: 'nptracer',
     name: 'NPTracer',
-    image: '/test.jpg',
+    image: '/nptracer.png',
     color: new THREE.Vector3(0.05, 0.97, 0.24), // green
   },
   {
     id: 'cuda-path-tracer',
     name: 'CUDA Path Tracer',
-    image: '/test.jpg',
+    image: '/cuda.png',
     color: new THREE.Vector3(0.97, 0.05, 0.97), // magenta
   },
   {
     id: 'clustered-renderer',
     name: 'Clustered Renderer',
-    image: '/test.jpg',
+    image: '/clustered.png',
     color: new THREE.Vector3(0.35, 0.05, 0.97), // indigo
   },
 ]

@@ -53,6 +53,7 @@ function projectCard(
     }),
   )
   hitPlane.position.set(0, -(0.1 + fontSize) / 2, 0.02)
+  hitPlane.userData.noFade = true // stays invisible regardless of scene fade
   group.add(hitPlane)
 
   return group

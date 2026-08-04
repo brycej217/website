@@ -16,6 +16,9 @@ export class Scene {
     // bounds
     this.bounds = bounds
 
+    // opacity — drives a fade over every visible object under root (see `opacity` setter)
+    this._opacity = 1
+
     app.on('render', (renderer, camera) => this.render(renderer, camera))
   }
 
@@ -27,6 +30,27 @@ export class Scene {
     this.root.add(object)
     this.app.interactables.push(object)
     return object
+  }
+
+  // fades every visible object under root; used by App.transition() to cross-fade
+  // scenes alongside the html overlay. Skips objects flagged noFade (e.g. invisible
+  // hit-planes, which must stay at opacity 0 regardless of the scene fade).
+  set opacity(value) {
+    this._opacity = value
+    this.root.traverse((obj) => {
+      if (obj.userData.noFade) return
+
+      if ('fillOpacity' in obj) {
+        obj.fillOpacity = value // troika-three-text
+      } else if (obj.material) {
+        obj.material.transparent = true
+        obj.material.opacity = value
+      }
+    })
+  }
+
+  get opacity() {
+    return this._opacity
   }
 
   // updates all objects in scene then renders them
