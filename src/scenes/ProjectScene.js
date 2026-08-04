@@ -34,6 +34,8 @@ export class ProjectScene extends Scene {
     this.count = 10
     this.simBound = 2.0
     this.sim = Blobs.sim(this.count, this.position)
+    this.blobOffset = app.allocateBlobSlots(this.count)
+    app.on('update', (delta) => this.blobUpdate(delta))
 
     // projects
     /*
@@ -82,7 +84,7 @@ export class ProjectScene extends Scene {
       card.userData.baseScale = card.scale.clone()
       card.onHover = () => scaleHover(card)
       card.onDehover = () => scaleDehover(card)
-      card.onClick = () => this.app.transition(() => this.projectClick(proj.id))
+      card.onClick = () => this.app.transition(() => this.projectClick(proj.id), -100)
 
       this.cards.push(card)
     })
@@ -112,7 +114,6 @@ export class ProjectScene extends Scene {
   }
 
   blobUpdate(delta) {
-    this.elapsed += delta
     const blobs = this.app.uniforms.blobs.value
 
     for (let i = 0; i < this.count; ++i) {
@@ -125,15 +126,11 @@ export class ProjectScene extends Scene {
       if (pos.z > this.simBound || pos.z < -this.simBound)
         velocity.z = -velocity.z
 
-      blobs[i].center.copy(pos)
+      blobs[this.blobOffset + i].center.copy(pos)
     }
   }
 
   onEnter() {
-    // blob updates
-    this.app.uniforms.count.value = this.count
-    this.unregister = this.app.on('update', (delta) => this.blobUpdate(delta))
-
     gsap.to(this.app.uniforms.color.value, {
       x: this.color.x,
       y: this.color.y,
@@ -144,7 +141,5 @@ export class ProjectScene extends Scene {
     })
   }
 
-  onExit() {
-    this.unregister()
-  }
+  onExit() {}
 }

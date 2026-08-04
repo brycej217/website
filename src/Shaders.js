@@ -4,7 +4,7 @@ export class Blobs {
   constructor(app) {
     this.app = app
 
-    this.MAX_BLOBS = 32
+    this.MAX_BLOBS = 64
     this.maxRad = 0.4
     this.minRad = 0.3
 
@@ -41,6 +41,19 @@ export class Blobs {
     const y = this.app.getY()
     this.material.uniforms.scrollY.value = y
     this.plane.position.y = y
+  }
+
+  createTransitionMaterial() {
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        ...this.material.uniforms,
+        scrollY: { value: 0 },
+        // independent color so it can be snapped to destination without affecting the main material
+        color: { value: this.material.uniforms.color.value.clone() },
+      },
+      vertexShader: this.VS(),
+      fragmentShader: this.FS(),
+    })
   }
 
   // returns array of ball sims that can be modified by other classes

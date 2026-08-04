@@ -13,7 +13,9 @@ export class PageManager {
     this.active = null
 
     const back = document.querySelector('#back')
-    back.addEventListener('click', () => this.app.transition(this.close()))
+    back.addEventListener('click', () =>
+      this.app.transition(() => this.close(), this.storedY),
+    )
 
     // teleport buttons
     const navTargets = { home: 0, projects: -10, about: -30 }
@@ -23,7 +25,7 @@ export class PageManager {
         this.app.transition(() => {
           this.close()
           this.app.camera.teleport(y)
-        })
+        }, y)
       })
     }
   }

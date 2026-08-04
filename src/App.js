@@ -39,73 +39,66 @@ export class App extends Emitter {
     this.uniforms = this.blobs.material.uniforms
     this.renderer.getDrawingBufferSize(this.uniforms.resolution.value)
 
-    // transition setup
-    this.t1 = globalScene.add(
-      't1',
-      circle(1, { color: new THREE.Color('black') }),
-    )
-    this.t2 = globalScene.add(
-      't2',
-      circle(1, { material: this.blobs.material }),
-    )
-    this.t2.position.z = 0.1
+    // transition setup — single circle using a cloned material with its own scrollY
+    this.nextBlobSlot = 0
+    this.transitionMat = this.blobs.createTransitionMaterial()
+    this.tc = circle(1, { material: this.transitionMat })
+    this.tc.position.z = 0.1
+    globalScene.root.add(this.tc) // bypass interactables
     this.on('update', () => {
-      this.t1.position.y = this.getY()
-      this.t2.position.y = this.getY()
+      this.tc.position.y = this.getY()
     })
-    this.t1.visible = false
-    this.t2.visible = false
+    this.tc.visible = false
+    this.htmlOverlay = document.querySelector('#world-html')
   }
 
-  transition(callback) {
+  transition(callback, destY = null) {
     this.tl?.kill()
 
-    this.tl = gsap.timeline({
-      onComplete: () => {
-        this.t1.visible = false
-        this.t2.visible = false
-        this.t1.scale.set(0.01, 0.01, 0.01)
-        this.t2.scale.set(0.01, 0.01, 0.01)
-      },
-    })
+    // point circle at destination; fall back to current view if not provided
+    this.transitionMat.uniforms.scrollY.value = destY ?? this.getY()
 
-    // starting state
-    this.t1.scale.set(0.01, 0.01, 0.01)
-    this.t2.scale.set(0.01, 0.01, 0.01)
-    this.t1.visible = true
-    this.t2.visible = false
+    // find the scene that owns destY so we can read its final color
+    const destScene = destY !== null
+      ? Object.values(this.scenes).find(
+          (s) => s.bounds && s.color && destY <= s.bounds.x && destY >= s.bounds.y,
+        )
+      : null
 
-    // phase 1: t1 grows to cover
-    this.tl.to(this.t1.scale, {
-      x: 10,
-      y: 10,
-      z: 10,
-      duration: 1,
-      ease: 'power3.out',
-    })
+    // immediately snap the circle to the destination color (no gsap)
+    this.transitionMat.uniforms.color.value.copy(
+      destScene ? destScene.color : this.uniforms.color.value,
+    )
 
-    // swap content once t1 has covered enough
-    this.tl.call(
-      () => {
-        callback?.()
-        this.t2.visible = true
-      },
-      null,
-      0.6,
-    ) // absolute time 0.5s
+    this.tc.scale.set(0.01, 0.01, 0.01)
+    this.tc.visible = true
 
-    // phase 2: t2 grows
-    this.tl.to(
-      this.t2.scale,
-      {
-        x: 10,
-        y: 10,
-        z: 10,
-        duration: 1,
-        ease: 'power3.out',
-      },
-      0.6,
-    ) // absolute time 0.5s
+    this.tl = gsap.timeline()
+
+    // world HTML fades out immediately so the positional snap is invisible
+    this.tl.to(this.htmlOverlay, { opacity: 0, duration: 0.25, ease: 'power2.out' }, 0)
+
+    // circle expands from center revealing destination
+    this.tl.to(this.tc.scale, { x: 10, y: 10, z: 10, duration: 0.7, ease: 'power3.out' }, 0)
+
+    // swap camera / scene at peak coverage
+    this.tl.call(() => {
+      callback?.()
+      this.transitionMat.uniforms.scrollY.value = this.getY()
+    }, null, 0.45)
+
+    // hide circle — snap main color to destination first so there is no color pop
+    this.tl.call(() => {
+      if (destScene) {
+        gsap.killTweensOf(this.uniforms.color.value)
+        this.uniforms.color.value.copy(this.transitionMat.uniforms.color.value)
+      }
+      this.tc.visible = false
+      this.tc.scale.set(0.01, 0.01, 0.01)
+    }, null, 0.7)
+
+    // world HTML fades back in to reveal destination content
+    this.tl.to(this.htmlOverlay, { opacity: 1, duration: 0.3, ease: 'power2.in' }, 0.65)
   }
 
   register(name, scene) {
@@ -114,6 +107,15 @@ export class App extends Emitter {
       this.currScene = scene
       this.currScene.onEnter()
     }
+  }
+
+  // Allocates a contiguous slice of the global blobs array for a scene's simulation.
+  // Returns the starting index; call once per scene during construction.
+  allocateBlobSlots(count) {
+    const offset = this.nextBlobSlot
+    this.nextBlobSlot += count
+    this.uniforms.count.value = this.nextBlobSlot
+    return offset
   }
 
   // main render loop (calls the on render function for all scenes)

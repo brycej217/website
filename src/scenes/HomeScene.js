@@ -12,10 +12,12 @@ export class HomeScene extends Scene {
     this.color = new THREE.Vector3(0.97, 0.24, 0.05)
     this.app.uniforms.color.value.copy(this.color) // set initial color
 
-    // blob setup
+    // blob setup — slot allocation makes this sim run persistently alongside other scenes
     this.count = 32
     this.simBound = 2.0
     this.sim = Blobs.sim(this.count, new THREE.Vector3(0, 0, 0))
+    this.blobOffset = app.allocateBlobSlots(this.count)
+    app.on('update', (delta) => this.blobUpdate(delta))
 
     // labels
     const group = this.add('lables', new THREE.Group(), {
@@ -45,7 +47,6 @@ export class HomeScene extends Scene {
   }
 
   blobUpdate(delta) {
-    this.elapsed += delta
     const blobs = this.app.uniforms.blobs.value
 
     for (let i = 0; i < this.count; ++i) {
@@ -58,13 +59,11 @@ export class HomeScene extends Scene {
       if (pos.z > this.simBound || pos.z < -this.simBound)
         velocity.z = -velocity.z
 
-      blobs[i].center.copy(pos)
+      blobs[this.blobOffset + i].center.copy(pos)
     }
   }
 
   onEnter() {
-    this.app.uniforms.count.value = this.count
-    this.unregister = this.app.on('update', (delta) => this.blobUpdate(delta))
     gsap.to(this.app.uniforms.color.value, {
       x: this.color.x,
       y: this.color.y,
@@ -75,7 +74,5 @@ export class HomeScene extends Scene {
     })
   }
 
-  onExit() {
-    this.unregister()
-  }
+  onExit() {}
 }

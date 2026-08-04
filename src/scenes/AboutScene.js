@@ -13,14 +13,12 @@ export class AboutScene extends Scene {
     // blob setup
     this.count = 5
     this.simBound = 2.0
-    this.sim = Blobs.sim(
-      this.count,
-      this.position.sub(new THREE.Vector3(0, 0, 0)),
-    )
+    this.sim = Blobs.sim(this.count, this.position.clone())
+    this.blobOffset = app.allocateBlobSlots(this.count)
+    app.on('update', (delta) => this.blobUpdate(delta))
   }
 
   blobUpdate(delta) {
-    this.elapsed += delta
     const blobs = this.app.uniforms.blobs.value
 
     for (let i = 0; i < this.count; ++i) {
@@ -33,12 +31,11 @@ export class AboutScene extends Scene {
       if (pos.z > this.simBound || pos.z < -this.simBound)
         velocity.z = -velocity.z
 
-      blobs[i].center.copy(pos)
+      blobs[this.blobOffset + i].center.copy(pos)
     }
   }
 
   onEnter() {
-    this.unregister = this.app.on('update', (delta) => this.blobUpdate(delta))
     gsap.to(this.app.uniforms.color.value, {
       x: this.color.x,
       y: this.color.y,
@@ -49,7 +46,5 @@ export class AboutScene extends Scene {
     })
   }
 
-  onExit() {
-    this.unregister()
-  }
+  onExit() {}
 }
