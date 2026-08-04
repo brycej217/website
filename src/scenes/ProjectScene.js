@@ -6,18 +6,35 @@ import { scaleHover, scaleDehover } from './Animations'
 import gsap from 'gsap'
 
 const projects = [
-  { id: 'vulkan-engine', name: 'Vulkan Engine', image: '/test.jpg' },
-  { id: 'glremix', name: 'glRemix', image: '/test.jpg' },
-  { id: 'nptracer', name: 'NPTracer', image: '/test.jpg' },
+  {
+    id: 'vulkan-engine',
+    name: 'Vulkan Engine',
+    image: '/test.jpg',
+    color: new THREE.Vector3(0.05, 0.7, 0.97), // cyan-blue
+  },
+  {
+    id: 'glremix',
+    name: 'glRemix',
+    image: '/test.jpg',
+    color: new THREE.Vector3(0.05, 0.97, 0.89), // teal
+  },
+  {
+    id: 'nptracer',
+    name: 'NPTracer',
+    image: '/test.jpg',
+    color: new THREE.Vector3(0.05, 0.97, 0.24), // green
+  },
   {
     id: 'cuda-path-tracer',
     name: 'CUDA Path Tracer',
     image: '/test.jpg',
+    color: new THREE.Vector3(0.97, 0.05, 0.97), // magenta
   },
   {
     id: 'clustered-renderer',
     name: 'Clustered Renderer',
     image: '/test.jpg',
+    color: new THREE.Vector3(0.35, 0.05, 0.97), // indigo
   },
 ]
 
@@ -82,9 +99,11 @@ export class ProjectScene extends Scene {
 
       // hover/click
       card.userData.baseScale = card.scale.clone()
+      card.userData.color = proj.color
       card.onHover = () => scaleHover(card)
       card.onDehover = () => scaleDehover(card)
-      card.onClick = () => this.app.transition(() => this.projectClick(proj.id), -100)
+      card.onClick = () =>
+        this.app.transition(() => this.projectClick(proj.id), -100, proj.color)
 
       this.cards.push(card)
     })

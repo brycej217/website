@@ -52,7 +52,7 @@ export class App extends Emitter {
     this.htmlOverlay = document.querySelector('#world-html')
   }
 
-  transition(callback, destY = null) {
+  transition(callback, destY = null, destColor = null) {
     this.tl?.kill()
 
     // point circle at destination; fall back to current view if not provided
@@ -65,10 +65,12 @@ export class App extends Emitter {
         )
       : null
 
+    // resolve destination color: explicit override (e.g. a project's own color) >
+    // the scene that owns destY > whatever color is currently showing
+    const targetColor = destColor ?? (destScene ? destScene.color : this.uniforms.color.value)
+
     // immediately snap the circle to the destination color (no gsap)
-    this.transitionMat.uniforms.color.value.copy(
-      destScene ? destScene.color : this.uniforms.color.value,
-    )
+    this.transitionMat.uniforms.color.value.copy(targetColor)
 
     this.tc.scale.set(0.01, 0.01, 0.01)
     this.tc.visible = true
@@ -89,10 +91,8 @@ export class App extends Emitter {
 
     // hide circle — snap main color to destination first so there is no color pop
     this.tl.call(() => {
-      if (destScene) {
-        gsap.killTweensOf(this.uniforms.color.value)
-        this.uniforms.color.value.copy(this.transitionMat.uniforms.color.value)
-      }
+      gsap.killTweensOf(this.uniforms.color.value)
+      this.uniforms.color.value.copy(this.transitionMat.uniforms.color.value)
       this.tc.visible = false
       this.tc.scale.set(0.01, 0.01, 0.01)
     }, null, 0.7)
