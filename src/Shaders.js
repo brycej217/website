@@ -68,6 +68,30 @@ export class Blobs {
     }))
   }
 
+  static projectSim(count, position, xBound, zBound = 1.5) {
+    const baseSpeed = 0.0025
+
+    return Array.from({ length: count }, (_, i) => {
+      // exaggerated per-blob pace: some noticeably slower, some faster
+      const speedScale = 0.3 + Math.random() * 2.2
+      const sign = () => (Math.random() < 0.5 ? -1 : 1)
+
+      return {
+        pos: new THREE.Vector3(
+          -xBound + ((i + 0.5) / count) * (2 * xBound),
+          Math.random() - 0.5, // staggered slightly on y
+          (Math.random() - 0.5) * 2 * zBound,
+        ).add(position), // spawn around the scene's world position
+        velocity: new THREE.Vector3(
+          sign() * baseSpeed * speedScale * 0.4, // gentle horizontal drift
+          sign() * baseSpeed * speedScale,
+          sign() * baseSpeed * speedScale * 0.4, // gentle z drift
+        ),
+        fading: false,
+      }
+    })
+  }
+
   VS() {
     return `
     void main()

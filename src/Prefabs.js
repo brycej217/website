@@ -90,12 +90,13 @@ function projectCard(
     width = 3.2,
     height = 1.8,
     font,
-    fontSize = 0.35,
+    fontSize = 0.33,
     subtitle,
-    subtitleFontSize = 0.2,
+    subtitleFontSize = 0.18,
     cornerRadius = 0.12,
-    padding = 0.35,
-    backdropColor = 0x0b0d10, // matches the page background (see style.css)
+    padding = 0.3,
+    backdropColor = 0x000000, // matches the page background (see style.css)
+    backdropOpacity = 1.0,
   } = {},
 ) {
   const group = new THREE.Group()
@@ -146,6 +147,30 @@ function projectCard(
     : -height / 2
   const contentH = topY - bottomY
   const centerY = (topY + bottomY) / 2
+
+  // backdrop behind everything, sized to the content bounds plus padding.
+  // the shared blob background sits at world z = 0 and covers the whole
+  // viewport, so this has to stay in *front* of that (z > 0) — just behind
+  // the image/text — or it gets occluded and never shows up.
+  const backdrop = new THREE.Mesh(
+    roundedRectGeometry(
+      width + padding,
+      contentH + padding,
+      cornerRadius + padding * 0.5,
+    ),
+    new THREE.MeshBasicMaterial({
+      color: backdropColor,
+      transparent: true,
+      opacity: backdropOpacity,
+      depthWrite: false,
+    }),
+  )
+  backdrop.position.set(0, centerY - padding * 0.5 - 0.1, 0.005)
+  // fixed translucency regardless of scene fade — Scene.opacity's crossfade
+  // would otherwise force this to fully opaque (1) once a transition
+  // finishes, same reason the hit-plane below opts out
+  backdrop.userData.noFade = true
+  group.add(backdrop)
 
   // transparent hit plane — sized to just the image, not the backdrop, so
   // hover/click only fires over the image itself

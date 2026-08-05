@@ -55,19 +55,41 @@ export class ProjectScene extends Scene {
     this.color = new THREE.Vector3(0.97, 0.62, 0.05)
 
     // blob setup
-    this.count = 10
+    this.count = 12
     this.simBound = 2.0
-    this.sim = Blobs.sim(this.count, this.position)
+    this.zBound = 1.5
+    // per-axis blob wrap bounds — NOT `this.bounds` (Scene already uses that
+    // name for the scene's world-Y navigation range; colliding with it broke
+    // Camera.boundsCheck()/App.transition's color lookup, which read
+    // scene.bounds.x/.y expecting the Vector2 top/bottom, not this object)
+    this.blobBounds = { x: this.simBound, y: 6.0, z: this.zBound }
+    this.radiusScale = 0.6 // blobs read smaller in this scene than elsewhere
+    this.sim = Blobs.projectSim(
+      this.count,
+      this.position,
+      this.simBound,
+      this.zBound,
+    )
     this.blobOffset = app.allocateBlobSlots(this.count)
+
+    // shrink each blob's (randomly-assigned) radius and capture it so the
+    // fade-in after a wrap has something to restore to
+    const blobsUniform = app.uniforms.blobs.value
+    this.sim.forEach((s, i) => {
+      const blob = blobsUniform[this.blobOffset + i]
+      blob.radius *= this.radiusScale
+      s.baseRadius = blob.radius
+    })
+
     app.on('update', (delta) => this.blobUpdate(delta))
 
     // project cards
     this.cards = []
     const cols = 3
-    const cardWidth = 4.0
+    const cardWidth = 3.8
     const cardHeight = (9 * cardWidth) / 16 // 16:9 aspect
-    const gapX = 0
-    const gapY = 0
+    const gapX = 0.2
+    const gapY = 0.2
 
     const built = projects.map((proj) =>
       this.add(
@@ -124,17 +146,52 @@ export class ProjectScene extends Scene {
     const blobs = this.app.uniforms.blobs.value
 
     for (let i = 0; i < this.count; ++i) {
-      const { pos, velocity } = this.sim[i]
-      pos.add(velocity)
-      if (pos.x > this.simBound || pos.x < -this.simBound)
-        velocity.x = -velocity.x
-      if (pos.y > this.simBound || pos.y < -this.simBound)
-        velocity.y = -velocity.y
-      if (pos.z > this.simBound || pos.z < -this.simBound)
-        velocity.z = -velocity.z
+      const s = this.sim[i]
+      const blob = blobs[this.blobOffset + i]
 
-      blobs[this.blobOffset + i].center.copy(pos)
+      if (!s.fading) {
+        s.pos.add(s.velocity)
+
+        // blobs live in world space, spawned around this.position — so
+        // every bound has to be checked relative to that, not absolute
+        for (const axis of ['x', 'y', 'z']) {
+          const local = s.pos[axis] - this.position[axis]
+          const bound = this.blobBounds[axis]
+
+          if (local > bound || local < -bound) {
+            this.wrapBlob(s, blob, axis, local > 0 ? -bound : bound)
+            break // one axis fading at a time is enough
+          }
+        }
+      }
+
+      blob.center.copy(s.pos)
     }
+  }
+
+  // fades a blob's radius out, teleports it to the opposite edge of the
+  // given axis, then fades the radius back in
+  wrapBlob(s, blob, axis, destLocal) {
+    const fadeDuration = 0.6
+    s.fading = true
+
+    gsap.to(blob, {
+      radius: 0,
+      duration: fadeDuration,
+      ease: 'power2.in',
+      onComplete: () => {
+        // suddenly appear at the opposite end of the sim
+        s.pos[axis] = this.position[axis] + destLocal
+        gsap.to(blob, {
+          radius: s.baseRadius,
+          duration: fadeDuration,
+          ease: 'power2.out',
+          onComplete: () => {
+            s.fading = false
+          },
+        })
+      },
+    })
   }
 
   onEnter() {
