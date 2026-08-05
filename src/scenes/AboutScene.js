@@ -10,6 +10,13 @@ export class AboutScene extends Scene {
     // color setup
     this.color = new THREE.Vector3(0.35, 0.05, 0.97)
 
+    // label setup
+    const name = this.add(
+      'label',
+      text('ABOUT', { fontSize: 1.5, font: '/mr.ttf' }),
+      { position: new THREE.Vector3(0, 4, 0), interactable: false },
+    )
+
     // blob setup
     this.count = 5
     this.simBound = 2.0

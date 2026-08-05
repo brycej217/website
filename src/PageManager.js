@@ -18,7 +18,7 @@ export class PageManager {
     )
 
     // teleport buttons
-    const navTargets = { home: 0, projects: -10, about: -30 }
+    const navTargets = { home: 0, projects: -11, about: -29 }
     for (const [id, y] of Object.entries(navTargets)) {
       document.querySelector(`#${id}`)?.addEventListener('click', (e) => {
         e.preventDefault()

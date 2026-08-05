@@ -119,7 +119,7 @@ function projectCard(
   title.anchorX = 'center'
   title.anchorY = 'top'
   title.position.set(0, height / 2 + titleGap, 0.02) // just above the plane, slightly forward
-  title.font = '/ic.ttf'
+  title.font = '/mr.ttf'
   title.sync()
   group.add(title)
 

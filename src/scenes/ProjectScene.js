@@ -54,6 +54,13 @@ export class ProjectScene extends Scene {
     // color setup
     this.color = new THREE.Vector3(0.97, 0.62, 0.05)
 
+    // label setup
+    const name = this.add(
+      'label',
+      text('PROJECTS', { fontSize: 1.5, font: '/mr.ttf' }),
+      { position: new THREE.Vector3(0, 5.5, 0), interactable: false },
+    )
+
     // blob setup
     this.count = 12
     this.simBound = 2.0
