@@ -1,4 +1,5 @@
 import gsap from 'gsap'
+import { marked } from 'marked'
 
 export class Page {
   constructor(app, data) {
@@ -8,6 +9,8 @@ export class Page {
     this.el = this.build() // create DOM
     this.el.style.display = 'none'
     document.querySelector('#pages').appendChild(this.el)
+
+    this.loadBody()
   }
 
   build() {
@@ -19,10 +22,12 @@ export class Page {
     h1.textContent = this.data.title
     section.appendChild(h1)
 
-    const desc = document.createElement('p')
-    desc.className = 'page-desc'
-    desc.textContent = this.data.description
-    section.appendChild(desc)
+    // filled in by loadBody() once the write-up markdown (or fallback
+    // description) is ready — kept as its own scrollable region since a full
+    // write-up can run much longer than the page itself
+    this.body = document.createElement('div')
+    this.body.className = 'page-body'
+    section.appendChild(this.body)
 
     if (this.data.tech) {
       const ul = document.createElement('ul')
@@ -51,6 +56,25 @@ export class Page {
     }
 
     return section
+  }
+
+  // loads the project's write-up from a markdown file in public/ (data.md) and
+  // renders it into .page-body; falls back to the plain-text description if
+  // there's no md file yet (or it fails to load)
+  async loadBody() {
+    if (this.data.md) {
+      try {
+        const res = await fetch(this.data.md)
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+        const md = await res.text()
+        this.body.innerHTML = marked.parse(md)
+        return
+      } catch (err) {
+        console.error(`failed to load ${this.data.md}:`, err)
+      }
+    }
+
+    this.body.textContent = this.data.description ?? ''
   }
 
   show() {

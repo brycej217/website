@@ -9,30 +9,37 @@ const projects = [
   {
     id: 'vulkan-engine',
     name: 'Vulkan Engine',
+    subtitle: 'A real-time game engine made with Vulkan.',
     image: '/glremix.png',
     color: new THREE.Vector3(0.05, 0.7, 0.97), // cyan-blue
   },
   {
     id: 'glremix',
     name: 'glRemix',
+    subtitle: 'A DX12 remastering platform for legacy OpenGL games.',
     image: '/glremix.png',
     color: new THREE.Vector3(0.05, 0.97, 0.89), // teal
   },
   {
     id: 'nptracer',
     name: 'NPTracer',
+    subtitle:
+      'A Vulkan pathtracer enabling simultaneous PBR and NPR stylization in 3D scenes.',
     image: '/nptracer.png',
     color: new THREE.Vector3(0.05, 0.97, 0.24), // green
   },
   {
     id: 'cuda-path-tracer',
     name: 'CUDA Path Tracer',
+    subtitle: 'A GPU-accelerated Monte Carlo path tracer written in CUDA.',
     image: '/cuda.png',
     color: new THREE.Vector3(0.97, 0.05, 0.97), // magenta
   },
   {
     id: 'clustered-renderer',
     name: 'Clustered Renderer',
+    subtitle:
+      'A real-time WebGPU renderer implementing Forward+ and Clustered Deferred lighting.',
     image: '/clustered.png',
     color: new THREE.Vector3(0.35, 0.05, 0.97), // indigo
   },
@@ -54,75 +61,56 @@ export class ProjectScene extends Scene {
     this.blobOffset = app.allocateBlobSlots(this.count)
     app.on('update', (delta) => this.blobUpdate(delta))
 
-    // projects
-    /*
-    const list = document.querySelector('#project-list')
-    for (const { id, name } of projects) {
-      const btn = document.createElement('button')
-      btn.textContent = name
-      btn.className = 'project-link'
-      btn.addEventListener('click', () =>
-        this.app.transition(this.projectClick(id)),
-      )
-      list.appendChild(btn)
-    }*/
-
     // project cards
     this.cards = []
     const cols = 3
-    const spacingX = 2.6
-    const spacingY = 2.2
-    const startX = -((cols - 1) * spacingX) / 2
+    const cardWidth = 4.0
+    const cardHeight = (9 * cardWidth) / 16 // 16:9 aspect
+    const gapX = 0
+    const gapY = 0
 
-    projects.forEach((proj, i) => {
-      const card = this.add(
+    const built = projects.map((proj) =>
+      this.add(
         proj.id,
-        projectCard(proj.image, proj.name, { font: '/ic.ttf' }),
-      )
-
-      const col = i % cols
-      const row = Math.floor(i / cols)
-      const gx = startX + col * spacingX
-      const gy = this.position.y + 2 - row * spacingY
-      card.position.set(gx, gy, 0).sub(this.root.position)
-
-      card.userData.home = new THREE.Vector3(gx, gy, 0).sub(this.root.position)
-      card.userData.phase = new THREE.Vector2(
-        Math.random() * Math.PI * 2,
-        Math.random() * Math.PI * 2,
-      )
-      card.userData.freq = new THREE.Vector2(
-        0.5 + Math.random() * 0.5,
-        0.5 + Math.random() * 0.5,
-      )
-      card.userData.amp = 0.15 + Math.random() * 0.1
-
-      // hover/click
-      card.userData.baseScale = card.scale.clone()
-      card.userData.color = proj.color
-      card.onHover = () => scaleHover(card)
-      card.onDehover = () => scaleDehover(card)
-      card.onClick = () =>
-        this.app.transition(() => this.projectClick(proj.id), -100, proj.color)
-
-      this.cards.push(card)
-    })
-
-    this.unregisterDrift = this.app.on('update', (delta) =>
-      this.cardUpdate(delta),
+        projectCard(proj.image, proj.name, {
+          width: cardWidth,
+          height: cardHeight,
+          subtitle: proj.subtitle,
+          font: '/ic.ttf',
+        }),
+      ),
     )
-  }
 
-  cardUpdate(delta) {
-    this.cardElapsed = (this.cardElapsed ?? 0) + delta
-    const t = this.cardElapsed
+    // space by the card's actual footprint (backdrop included), not just
+    const { cardWidth: footprintW, cardHeight: footprintH } = built[0].userData
+    const spacingX = footprintW + gapX - 0.25
+    const spacingY = footprintH + gapY - 0.25
 
-    for (const card of this.cards) {
-      const { home, phase, freq, amp } = card.userData
+    // group into rows of `cols`; a short final row (project count not a
+    for (let row = 0; row * cols < projects.length; row++) {
+      const rowProjects = projects.slice(row * cols, row * cols + cols)
+      const rowStartX = -((rowProjects.length - 1) * spacingX) / 2
 
-      // small elliptical drift around the grid position
-      card.position.x = home.x + Math.sin(t * freq.x + phase.x) * amp
-      card.position.y = home.y + Math.cos(t * freq.y + phase.y) * amp
+      rowProjects.forEach((proj, col) => {
+        const card = built[row * cols + col]
+        const gx = rowStartX + col * spacingX
+        const gy = this.position.y + 2 - row * spacingY
+        card.position.set(gx, gy, 0).sub(this.root.position)
+
+        // hover/click
+        card.userData.baseScale = card.scale.clone()
+        card.userData.color = proj.color
+        card.onHover = () => scaleHover(card, 1.2)
+        card.onDehover = () => scaleDehover(card)
+        card.onClick = () =>
+          this.app.transition(
+            () => this.projectClick(proj.id),
+            -100,
+            proj.color,
+          )
+
+        this.cards.push(card)
+      })
     }
   }
 

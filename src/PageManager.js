@@ -12,8 +12,8 @@ export class PageManager {
     }
     this.active = null
 
-    const back = document.querySelector('#back')
-    back.addEventListener('click', () =>
+    this.backBtn = document.querySelector('#back')
+    this.backBtn.addEventListener('click', () =>
       this.app.transition(() => this.close(), this.storedY),
     )
 
@@ -41,11 +41,13 @@ export class PageManager {
     this.active?.hide()
     this.active = this.pages[id]
     this.active?.show()
+    this.backBtn.classList.add('visible')
   }
 
   close() {
     this.active?.hide()
     this.active = null
+    this.backBtn.classList.remove('visible')
 
     // tell app that we are back in scene mode and retrieve stored y
     this.app.inProject = false

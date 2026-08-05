@@ -98,6 +98,16 @@ body {
   pointer-events: auto;
 }
 
+/* the project write-up can run much taller than one viewport, so it's
+   top-aligned (rather than centered) and left to overflow .world-section's
+   box — App.js extends the inProject scroll bounds to match its actual
+   height, so the overflow is reached by scrolling the world like everything
+   else, instead of clipping it into its own inner scrollbar */
+.page-section {
+  align-items: flex-start;
+  padding-top: 8rem;
+}
+
 .about-inner {
   max-width: 620px;
   padding: 2.5rem;
@@ -164,6 +174,7 @@ body {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
+  box-sizing: border-box;
 }
 
 .page-title {
@@ -173,12 +184,95 @@ body {
   line-height: 1.1;
 }
 
-.page-desc {
+/* rendered markdown write-up (or the plain description, as a fallback) */
+.page-body {
   font-family: 'IC', sans-serif;
-  font-size: 1.5rem;
+  font-size: 1.15rem;
   line-height: 1.7;
   margin: 0 0 1.5rem;
   max-width: 60ch;
+}
+
+.page-body :first-child {
+  margin-top: 0;
+}
+.page-body :last-child {
+  margin-bottom: 0;
+}
+
+.page-body h1,
+.page-body h2,
+.page-body h3 {
+  font-family: 'MR', sans-serif;
+  line-height: 1.2;
+  margin: 1.75rem 0 0.75rem;
+}
+.page-body h1 {
+  font-size: 1.9rem;
+}
+.page-body h2 {
+  font-size: 1.5rem;
+}
+.page-body h3 {
+  font-size: 1.2rem;
+}
+
+.page-body p {
+  margin: 0 0 1.1rem;
+}
+
+.page-body ul,
+.page-body ol {
+  margin: 0 0 1.1rem;
+  padding-left: 1.4rem;
+}
+.page-body li {
+  margin: 0.3rem 0;
+}
+
+.page-body a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.4);
+  transition: text-decoration-color 0.3s;
+}
+.page-body a:hover {
+  text-decoration-color: currentColor;
+}
+
+.page-body img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 0.5rem 0 1.1rem;
+  display: block;
+}
+
+.page-body code {
+  font-family: monospace;
+  font-size: 0.9em;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+}
+
+.page-body pre {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 0 0 1.1rem;
+}
+.page-body pre code {
+  background: none;
+  padding: 0;
+}
+
+.page-body blockquote {
+  margin: 0 0 1.1rem;
+  padding-left: 1rem;
+  border-left: 2px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .page-tech {
@@ -242,9 +336,11 @@ body {
   transform: translateX(6px);
 }
 
-/* back button — top-left of the page area */
+/* back button — top-left, fixed to the viewport (lives outside #world-html
+   so scrolling through a long write-up doesn't carry it off-screen); hidden
+   until PageManager toggles .visible on open/close */
 .back-btn {
-  position: absolute;
+  position: fixed;
   top: 2rem;
   left: 2rem;
   font-family: 'MR', sans-serif;
@@ -255,8 +351,16 @@ body {
   border: none;
   padding: 0.25rem 0.5rem;
   cursor: pointer;
-  transition: transform 0.3s;
+  transition:
+    transform 0.3s,
+    opacity 0.3s;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 10;
+}
+.back-btn.visible {
   pointer-events: auto;
+  opacity: 1;
 }
 .back-btn:hover {
   transform: translateX(-6px); /* slides left, reinforcing "back" */

@@ -4,6 +4,7 @@ import { Camera } from './Camera'
 import { Blobs } from './Shaders'
 import { Scene } from './scenes/Scene'
 import { circle } from './Prefabs'
+import { PIXELS_PER_UNIT } from './WorldHtml'
 import './style.css'
 import gsap from 'gsap'
 
@@ -186,8 +187,16 @@ export class App extends Emitter {
 
     // if in project view do not perform alternative bounds checking
     if (this.inProject) {
-      const top = -90 // top of screen
-      const bottom = -125 // bottom of screen
+      const top = -90 // top of screen (small buffer above the page's anchor)
+
+      // bottom bound follows the active page's actual rendered height (it's
+      // top-aligned and un-clipped — see .page-section) so however long the
+      // write-up is, scrolling the world reaches all of it
+      const pageEl = this.pages?.active?.el
+      const viewportUnits =
+        this.renderer.domElement.clientHeight / PIXELS_PER_UNIT
+      const contentUnits = pageEl ? pageEl.scrollHeight / PIXELS_PER_UNIT : 0
+      const bottom = -100 - Math.max(0, contentUnits - viewportUnits) - 1
 
       this.camera.boundsCheck(top, bottom, null)
       return

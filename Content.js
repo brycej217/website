@@ -23,6 +23,7 @@ export const content = [
     title: 'NPTracer',
     description:
       'A physically-based path tracer implemented in Vulkan, featuring a render graph, BRDF sampling, and full PBR material support. Renders offline images with importance sampling and multiple bounce global illumination.',
+    md: '/np.md', // full write-up, rendered from public/np.md — see Page.js
     tech: ['Vulkan', 'GLSL', 'PBR', 'Path Tracing'],
     links: [{ label: 'GitHub', url: 'https://github.com/brycej217/nptracer' }],
   },

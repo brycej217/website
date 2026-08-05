@@ -1,8 +1,7 @@
 import * as THREE from 'three'
 import gsap from 'gsap'
 
-function scaleHover(object) {
-  const factor = 1.5
+function scaleHover(object, factor = 1.5) {
   if (!object.userData.baseScale) {
     object.userData.baseScale = object.scale.clone()
   }
