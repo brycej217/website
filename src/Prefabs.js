@@ -95,8 +95,10 @@ function projectCard(
     subtitleFontSize = 0.18,
     cornerRadius = 0.12,
     padding = 0.3,
-    backdropColor = 0x000000, // matches the page background (see style.css)
-    backdropOpacity = 1.0,
+    backdropColor = 0xffffff,
+    backdropOpacity = 0.14, // faint white tint — a flat MeshBasicMaterial can't
+    // sample/blur what's behind it, so the "frosted glass" read comes from
+    // this translucent tint plus the edge highlight below, not a real blur
   } = {},
 ) {
   const group = new THREE.Group()
@@ -106,6 +108,7 @@ function projectCard(
   const mat = new THREE.MeshBasicMaterial({ color: 'white' })
   const mesh = new THREE.Mesh(geo, mat)
   mesh.position.z = 0.01
+  mesh.raycast = () => {} // purely visual — hitPlane below is the only hit target
   group.add(mesh)
 
   loadCardTexture(imageUrl, mat)
@@ -120,6 +123,7 @@ function projectCard(
   title.anchorY = 'top'
   title.position.set(0, height / 2 + titleGap, 0.02) // just above the plane, slightly forward
   title.font = '/mr.ttf'
+  title.raycast = () => {} // purely visual — hitPlane below is the only hit target
   title.sync()
   group.add(title)
 
@@ -136,6 +140,7 @@ function projectCard(
     sub.maxWidth = width
     sub.position.set(0, -height / 2 - subtitleGap, 0.02)
     sub.font = '/ic.ttf'
+    sub.raycast = () => {} // purely visual — hitPlane below is the only hit target
     sub.sync()
     group.add(sub)
   }
@@ -152,12 +157,13 @@ function projectCard(
   // the shared blob background sits at world z = 0 and covers the whole
   // viewport, so this has to stay in *front* of that (z > 0) — just behind
   // the image/text — or it gets occluded and never shows up.
+  const backdropGeo = roundedRectGeometry(
+    width + padding,
+    contentH + padding,
+    cornerRadius + padding * 0.5,
+  )
   const backdrop = new THREE.Mesh(
-    roundedRectGeometry(
-      width + padding,
-      contentH + padding,
-      cornerRadius + padding * 0.5,
-    ),
+    backdropGeo,
     new THREE.MeshBasicMaterial({
       color: backdropColor,
       transparent: true,
@@ -170,10 +176,29 @@ function projectCard(
   // would otherwise force this to fully opaque (1) once a transition
   // finishes, same reason the hit-plane below opts out
   backdrop.userData.noFade = true
+  // purely visual — without this, the backdrop's much larger area (it
+  // extends past the image into the padding) would itself be raycast-
+  // testable and silently widen the hoverable/clickable region past hitPlane
+  //backdrop.raycast = () => {}
   group.add(backdrop)
 
-  // transparent hit plane — sized to just the image, not the backdrop, so
-  // hover/click only fires over the image itself
+  // thin light edge traced around the backdrop's silhouette — sells the
+  // "glass" read (a subtle rim catching light) alongside the translucent tint
+  const edge = new THREE.LineLoop(
+    new THREE.EdgesGeometry(backdropGeo),
+    new THREE.LineBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.25,
+    }),
+  )
+  edge.position.set(backdrop.position.x, backdrop.position.y, 0.006)
+  edge.userData.noFade = true
+  edge.raycast = () => {} // purely visual, same reason as the backdrop above
+  group.add(edge)
+
+  // hit plane — the only raycast target in the card; sized to just the
+  // image, not the backdrop, so hover/click only fires over the image itself
   const hitPlane = new THREE.Mesh(
     new THREE.PlaneGeometry(width, height),
     new THREE.MeshBasicMaterial({

@@ -108,8 +108,7 @@ body {
   padding-top: 8rem;
 }
 
-/* two columns, no panel background — content sits directly over the
-   animated blob scene instead of on a frosted-glass card */
+/* two columns on a frosted-glass panel, blurring the animated scene behind it */
 .about-inner {
   max-width: 900px;
   padding: 2.5rem;
@@ -117,6 +116,11 @@ body {
   display: flex;
   gap: 3rem;
   align-items: flex-start;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
 }
 
 .about-photo {
