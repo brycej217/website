@@ -238,6 +238,92 @@ body {
   }
 }
 
+/* project grid — plain DOM (see #project-grid in ProjectScene.js) rather
+   than the site's usual 3D prefabs, specifically so <img> gifs actually
+   animate (a WebGL texture's source image is never "rendered" in the page,
+   which is what browsers require to keep advancing an animated image) */
+.project-inner {
+  width: 100%;
+  max-width: 1500px;
+  padding: 0 2rem;
+  box-sizing: border-box;
+  color: white;
+  text-align: center;
+}
+
+/* flex (not grid) so a short last row — 5 cards is 3 + 2 — wraps centered
+   instead of stranding the 2 leftover cards against the left edge; each
+   card's basis is computed to land exactly 3 per row */
+.project-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.75rem;
+}
+
+.project-card {
+  flex: 0 0 calc((100% - 3.5rem) / 3); /* 3.5rem = 2 gaps between 3 cards */
+  max-width: calc((100% - 3.5rem) / 3);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  cursor: pointer;
+  transition:
+    transform 0.3s ease,
+    background 0.3s ease;
+}
+.project-card:hover {
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.project-card-media {
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.project-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.project-card-title {
+  font-family: 'MR', sans-serif;
+  font-size: 1.8rem;
+  margin: 0;
+  text-align: center;
+}
+
+.project-card-subtitle {
+  font-family: 'IC', sans-serif;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  margin: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+@media (max-width: 900px) {
+  .project-card {
+    flex-basis: calc((100% - 1.75rem) / 2);
+    max-width: calc((100% - 1.75rem) / 2);
+  }
+}
+@media (max-width: 600px) {
+  .project-card {
+    flex-basis: 100%;
+    max-width: 100%;
+  }
+}
+
 .page {
   max-width: 960px;
   padding: 2.5rem;

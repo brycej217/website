@@ -1,8 +1,7 @@
 import * as THREE from 'three'
 import { Scene } from './Scene'
 import { Blobs } from '../Shaders'
-import { plane, text, circle, cube, projectCard } from '../Prefabs'
-import { scaleHover, scaleDehover } from './Animations'
+import { text } from '../Prefabs'
 import gsap from 'gsap'
 
 const projects = [
@@ -40,7 +39,7 @@ const projects = [
     name: 'Clustered Renderer',
     subtitle:
       'A real-time WebGPU renderer implementing Forward+ and Clustered Deferred lighting.',
-    image: '/clustered.png',
+    image: '/cluster.gif',
     color: new THREE.Vector3(0, 0, 0), // indigo
   },
 ]
@@ -54,11 +53,10 @@ export class ProjectScene extends Scene {
     // color setup
     this.color = new THREE.Vector3(0.97, 0.62, 0.05)
 
-    // label setup
     const name = this.add(
       'label',
       text('PROJECTS', { fontSize: 1.5, font: '/mr.ttf' }),
-      { position: new THREE.Vector3(0, 5.5, 0), interactable: false },
+      { interactable: false, position: new THREE.Vector3(0, 6, 0) },
     )
 
     // blob setup
@@ -90,56 +88,48 @@ export class ProjectScene extends Scene {
 
     app.on('update', (delta) => this.blobUpdate(delta))
 
-    // project cards
-    this.cards = []
-    const cols = 3
-    const cardWidth = 3.8
-    const cardHeight = (9 * cardWidth) / 16 // 16:9 aspect
-    const gapX = 0.2
-    const gapY = 0.2
+    // project cards — plain DOM elements (see #project-grid in index.html,
+    // kept in scroll-sync with this scene by WorldHtml like the about
+    // section) rather than a 3D prefab, so that <img> gifs actually animate:
+    // browsers only keep advancing an animated image's frames while it's
+    // part of the rendered document, which a WebGL texture's source image
+    // never is.
+    this.buildCards()
+  }
 
-    const built = projects.map((proj) =>
-      this.add(
-        proj.id,
-        projectCard(proj.image, proj.name, {
-          width: cardWidth,
-          height: cardHeight,
-          subtitle: proj.subtitle,
-          font: '/ic.ttf',
-        }),
-      ),
-    )
+  buildCards() {
+    const grid = document.querySelector('#project-grid')
+    if (!grid) return
 
-    // space by the card's actual footprint (backdrop included), not just
-    const { cardWidth: footprintW, cardHeight: footprintH } = built[0].userData
-    const spacingX = footprintW + gapX - 0.25
-    const spacingY = footprintH + gapY - 0.25
+    for (const proj of projects) {
+      const card = document.createElement('div')
+      card.className = 'project-card'
 
-    // group into rows of `cols`; a short final row (project count not a
-    for (let row = 0; row * cols < projects.length; row++) {
-      const rowProjects = projects.slice(row * cols, row * cols + cols)
-      const rowStartX = -((rowProjects.length - 1) * spacingX) / 2
+      const title = document.createElement('h3')
+      title.className = 'project-card-title'
+      title.textContent = proj.name
+      card.appendChild(title)
 
-      rowProjects.forEach((proj, col) => {
-        const card = built[row * cols + col]
-        const gx = rowStartX + col * spacingX
-        const gy = this.position.y + 2 - row * spacingY
-        card.position.set(gx, gy, 0).sub(this.root.position)
+      const media = document.createElement('div')
+      media.className = 'project-card-media'
+      const img = document.createElement('img')
+      img.className = 'project-card-image'
+      img.src = proj.image
+      img.alt = proj.name
+      img.loading = 'lazy'
+      media.appendChild(img)
+      card.appendChild(media)
 
-        // hover/click
-        card.userData.baseScale = card.scale.clone()
-        card.userData.color = proj.color
-        card.onHover = () => scaleHover(card, 1.2)
-        card.onDehover = () => scaleDehover(card)
-        card.onClick = () =>
-          this.app.transition(
-            () => this.projectClick(proj.id),
-            -100,
-            proj.color,
-          )
+      const subtitle = document.createElement('p')
+      subtitle.className = 'project-card-subtitle'
+      subtitle.textContent = proj.subtitle
+      card.appendChild(subtitle)
 
-        this.cards.push(card)
-      })
+      card.addEventListener('click', () =>
+        this.app.transition(() => this.projectClick(proj.id), -100, proj.color),
+      )
+
+      grid.appendChild(card)
     }
   }
 
