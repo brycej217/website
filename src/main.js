@@ -14,11 +14,11 @@ const homeScene = new HomeScene(app, {
 })
 const projectScene = new ProjectScene(app, {
   position: new THREE.Vector3(0.0, -13.0, 0.0),
-  bounds: new THREE.Vector2(-5.0, -25.0),
+  bounds: new THREE.Vector2(-5.0, -20.0),
 })
 const aboutScene = new AboutScene(app, {
-  position: new THREE.Vector3(0.0, -30.0, 0.0),
-  bounds: new THREE.Vector2(-10.0, -40.0),
+  position: new THREE.Vector3(0.0, -26.0, 0.0),
+  bounds: new THREE.Vector2(-20.0, -35.0),
 })
 
 const worldHtml = new WorldHtml(app)

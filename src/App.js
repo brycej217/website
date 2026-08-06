@@ -51,10 +51,25 @@ export class App extends Emitter {
     })
     this.tc.visible = false
     this.htmlOverlay = document.querySelector('#world-html')
+    this.navEl = document.querySelector('#nav1')
+    this.backBtnEl = document.querySelector('#back')
   }
 
   transition(callback, destY = null, destColor = null) {
+    // killing an in-flight timeline can catch it mid-transition — after it
+    // set its destination scene's opacity to 0 (to fade in behind the wipe)
+    // but before its own fade-back-in ever ran. Left alone that scene would
+    // stay invisible forever, so every scene is snapped fully visible before
+    // the new timeline below re-drives whichever ones it actually cares about
     this.tl?.kill()
+    for (const scene of Object.values(this.scenes)) {
+      if (scene.color) scene.opacity = 1
+    }
+
+    // lock out the nav/back button for the duration — a click landing
+    // mid-transition raced this one (two competing transition() calls); the
+    // 'transitioning' class hides them and disables pointer-events via CSS
+    this.navEl.classList.add('transitioning')
 
     // point circle at destination; fall back to current view if not provided
     this.transitionMat.uniforms.scrollY.value = destY ?? this.getY()
@@ -137,11 +152,6 @@ export class App extends Emitter {
       0.65,
     )
 
-    // destination scene's objects fade back in. Starts earlier than the html
-    // (while still hidden behind the circle) and uses an ease-out curve so most
-    // of the opacity change happens while masked — by the time the circle is
-    // gone at 0.7 the cards are already mostly visible, so it reads as a real
-    // cross-fade instead of popping in over the mask's last few frames
     if (destScene) {
       this.tl.to(
         destScene,
@@ -149,6 +159,11 @@ export class App extends Emitter {
         0.65,
       )
     }
+
+    this.tl.eventCallback('onComplete', () => {
+      this.navEl.classList.remove('transitioning')
+      this.backBtnEl.classList.remove('transitioning')
+    })
   }
 
   register(name, scene) {
@@ -160,7 +175,6 @@ export class App extends Emitter {
   }
 
   // Allocates a contiguous slice of the global blobs array for a scene's simulation.
-  // Returns the starting index; call once per scene during construction.
   allocateBlobSlots(count) {
     const offset = this.nextBlobSlot
     this.nextBlobSlot += count
@@ -190,13 +204,11 @@ export class App extends Emitter {
       const top = -90 // top of screen (small buffer above the page's anchor)
 
       // bottom bound follows the active page's actual rendered height (it's
-      // top-aligned and un-clipped — see .page-section) so however long the
-      // write-up is, scrolling the world reaches all of it
       const pageEl = this.pages?.active?.el
       const viewportUnits =
         this.renderer.domElement.clientHeight / PIXELS_PER_UNIT
       const contentUnits = pageEl ? pageEl.scrollHeight / PIXELS_PER_UNIT : 0
-      const bottom = -100 - Math.max(0, contentUnits - viewportUnits) - 1
+      const bottom = -100 - Math.max(0, contentUnits - viewportUnits) - 10
 
       this.camera.boundsCheck(top, bottom, null)
       return

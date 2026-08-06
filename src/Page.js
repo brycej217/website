@@ -22,13 +22,6 @@ export class Page {
     h1.textContent = this.data.title
     section.appendChild(h1)
 
-    // filled in by loadBody() once the write-up markdown (or fallback
-    // description) is ready — kept as its own scrollable region since a full
-    // write-up can run much longer than the page itself
-    this.body = document.createElement('div')
-    this.body.className = 'page-body'
-    section.appendChild(this.body)
-
     if (this.data.tech) {
       const ul = document.createElement('ul')
       ul.className = 'page-tech'
@@ -54,6 +47,13 @@ export class Page {
       }
       section.appendChild(nav)
     }
+
+    // filled in by loadBody() once the write-up markdown (or fallback
+    // description) is ready — kept as its own scrollable region since a full
+    // write-up can run much longer than the page itself
+    this.body = document.createElement('div')
+    this.body.className = 'page-body'
+    section.appendChild(this.body)
 
     return section
   }

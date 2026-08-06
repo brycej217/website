@@ -1,8 +1,6 @@
-# NPTracer - **_Non-Photorealistic Pathtracing_** in Houdini
+![np gif](/np.gif)
 
-![sponza scene with contour stylization](docs/assets/sponza_scene_with_contour_stylization.png)
-![dragon with greyscale stylization](docs/assets/dragon_with_greyscale_stylization.png)
-![sponza in houdini](docs/assets/sponza_in_houdini.png)
+# NPTracer - **_Non-Photorealistic Pathtracing_** in Houdini
 
 ## User Manual
 

@@ -6,6 +6,7 @@ export class Camera {
     // camera setup
     this.app = app
     const canvas = document.querySelector('#viewport')
+    this.canvas = canvas
     const fov = 75
     const aspect = canvas.clientWidth / canvas.clientHeight
     const near = 0.1
@@ -48,12 +49,30 @@ export class Camera {
   }
 
   onMouseDown(event) {
+    // these listeners are on `window` so they fire for every click on the
+    // page, including ones that land on real DOM UI (nav links, the about
+    // panel, page content) sitting visually on top of the canvas. Without
+    // this check, a 3D object positioned behind that UI can still register
+    // as "hovered" and get clicked right along with whatever the UI itself
+    // does, racing two transitions against each other.
+    if (event.target !== this.canvas) return
+
     if (this.hovered) {
       this.hovered.onClick?.()
     }
   }
 
   onMouseMove(event) {
+    // see onMouseDown — ignore the 3D scene while the pointer is over DOM UI
+    if (event.target !== this.canvas) {
+      if (this.hovered) {
+        this.hovered.onDehover?.()
+        this.hovered = null
+      }
+      this.canvas.style.cursor = 'default'
+      return
+    }
+
     // mouse -> NDC [-1, 1]
     this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1
     this.pointer.y = -((event.clientY / window.innerHeight) * 2 - 1)
@@ -79,9 +98,7 @@ export class Camera {
       this.hovered = hit
       this.hovered?.onHover?.()
     }
-    document.querySelector('#viewport').style.cursor = hit
-      ? 'pointer'
-      : 'default'
+    this.canvas.style.cursor = hit ? 'pointer' : 'default'
   }
 
   boundsCheck(top, bottom, scenes) {

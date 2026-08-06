@@ -18,7 +18,7 @@ export class PageManager {
     )
 
     // teleport buttons
-    const navTargets = { home: 0, projects: -11, about: -29 }
+    const navTargets = { home: 0, projects: -11, about: -25 }
     for (const [id, y] of Object.entries(navTargets)) {
       document.querySelector(`#${id}`)?.addEventListener('click', (e) => {
         e.preventDefault()
@@ -42,12 +42,14 @@ export class PageManager {
     this.active = this.pages[id]
     this.active?.show()
     this.backBtn.classList.add('visible')
+    this.app.navEl.classList.add('hidden')
   }
 
   close() {
     this.active?.hide()
     this.active = null
     this.backBtn.classList.remove('visible')
+    this.app.navEl.classList.remove('hidden')
 
     // tell app that we are back in scene mode and retrieve stored y
     this.app.inProject = false

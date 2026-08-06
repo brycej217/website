@@ -46,6 +46,21 @@ body {
   display: flex;
   gap: 1rem;
   pointer-events: auto;
+  transition: opacity 0.2s ease;
+}
+
+/* scene transitions teleport the camera/swap scenes partway through — a nav
+   click landing mid-transition raced the in-flight one (see App.transition),
+   so the nav is locked out and hidden for the duration instead */
+#nav1.transitioning {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* while inside a project write-up, the back button takes over this slot */
+#nav1.hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 #nav2 {
@@ -224,12 +239,11 @@ body {
 }
 
 .page {
-  max-width: 720px;
+  max-width: 960px;
   padding: 2.5rem;
   color: white;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   box-sizing: border-box;
 }
 
@@ -238,6 +252,7 @@ body {
   font-size: 3.5rem;
   margin: 0 0 1.5rem;
   line-height: 1.1;
+  text-align: center;
 }
 
 /* rendered markdown write-up (or the plain description, as a fallback) */
@@ -246,7 +261,7 @@ body {
   font-size: 1.15rem;
   line-height: 1.7;
   margin: 0 0 1.5rem;
-  max-width: 60ch;
+  max-width: 80ch;
 }
 
 .page-body :first-child {
@@ -350,7 +365,7 @@ body {
 .page-links {
   display: flex;
   gap: 1.5rem;
-  margin-top: 2rem;
+  margin: 2rem 0 2.5rem;
 }
 .page-link {
   font-family: 'IC', sans-serif;
@@ -392,15 +407,15 @@ body {
   transform: translateX(6px);
 }
 
-/* back button — top-left, fixed to the viewport (lives outside #world-html
-   so scrolling through a long write-up doesn't carry it off-screen); hidden
-   until PageManager toggles .visible on open/close */
+/* back button — takes over #nav1's top-left slot while in a project (lives
+   outside #world-html so scrolling through a long write-up doesn't carry it
+   off-screen); hidden until PageManager toggles .visible on open/close */
 .back-btn {
   position: fixed;
-  top: 2rem;
-  left: 2rem;
+  top: 1rem;
+  left: 1rem;
   font-family: 'MR', sans-serif;
-  font-size: 2.5rem;
+  font-size: 2rem;
   line-height: 1;
   color: white;
   background: none;
@@ -417,6 +432,10 @@ body {
 .back-btn.visible {
   pointer-events: auto;
   opacity: 1;
+}
+/* locked out mid-transition too — same reasoning as #nav1.transitioning */
+.back-btn.transitioning {
+  pointer-events: none;
 }
 .back-btn:hover {
   transform: translateX(-6px); /* slides left, reinforcing "back" */

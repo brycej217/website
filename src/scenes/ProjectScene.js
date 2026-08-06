@@ -11,29 +11,29 @@ const projects = [
     name: 'Vulkan Engine',
     subtitle: 'A real-time game engine made with Vulkan.',
     image: '/glremix.png',
-    color: new THREE.Vector3(0.05, 0.7, 0.97), // cyan-blue
+    color: new THREE.Vector3(0, 0, 0), // cyan-blue
   },
   {
     id: 'glremix',
     name: 'glRemix',
     subtitle: 'A DX12 remastering platform for legacy OpenGL games.',
     image: '/glremix.png',
-    color: new THREE.Vector3(0.05, 0.97, 0.89), // teal
+    color: new THREE.Vector3(0, 0, 0), // teal
   },
   {
     id: 'nptracer',
     name: 'NPTracer',
     subtitle:
       'A Vulkan pathtracer enabling simultaneous PBR and NPR stylization in 3D scenes.',
-    image: '/nptracer.png',
-    color: new THREE.Vector3(0.05, 0.97, 0.24), // green
+    image: '/np.gif',
+    color: new THREE.Vector3(0.17, 0.24, 0.44), // green
   },
   {
     id: 'cuda-path-tracer',
     name: 'CUDA Path Tracer',
     subtitle: 'A GPU-accelerated Monte Carlo path tracer written in CUDA.',
     image: '/cuda.png',
-    color: new THREE.Vector3(0.97, 0.05, 0.97), // magenta
+    color: new THREE.Vector3(0, 0, 0), // magenta
   },
   {
     id: 'clustered-renderer',
@@ -41,7 +41,7 @@ const projects = [
     subtitle:
       'A real-time WebGPU renderer implementing Forward+ and Clustered Deferred lighting.',
     image: '/clustered.png',
-    color: new THREE.Vector3(0.35, 0.05, 0.97), // indigo
+    color: new THREE.Vector3(0, 0, 0), // indigo
   },
 ]
 

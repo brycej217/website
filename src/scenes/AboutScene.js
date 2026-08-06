@@ -14,7 +14,7 @@ export class AboutScene extends Scene {
     const name = this.add(
       'label',
       text('ABOUT', { fontSize: 1.5, font: '/mr.ttf' }),
-      { position: new THREE.Vector3(0, 4, 0), interactable: false },
+      { position: new THREE.Vector3(0, 4.5, 0), interactable: false },
     )
 
     // blob setup

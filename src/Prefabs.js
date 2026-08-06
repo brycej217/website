@@ -10,6 +10,19 @@ function loadCardTexture(url, mat) {
   if (/\.gif($|\?)/i.test(url)) {
     const img = new Image()
     img.crossOrigin = 'anonymous'
+
+    // browsers only keep advancing an animated image's frames while it's
+    // actually part of the rendered document — a fully detached <img> (never
+    // inserted into the DOM) decodes its first frame and then just freezes
+    // there, which is why the gif wasn't moving. Parking it off-screen keeps
+    // it "rendered" (and therefore playing) without ever being visible; the
+    // canvas below is what actually gets shown on the card.
+    img.style.position = 'fixed'
+    img.style.left = '-9999px'
+    img.style.width = '1px'
+    img.style.height = '1px'
+    document.body.appendChild(img)
+
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
     const tex = new THREE.CanvasTexture(canvas)
@@ -22,7 +35,10 @@ function loadCardTexture(url, mat) {
       mat.needsUpdate = true
 
       const draw = () => {
-        if (!mat.map) return // card disposed, stop the loop
+        if (!mat.map) {
+          img.remove() // card disposed, stop the loop and clean up the hidden <img>
+          return
+        }
         ctx.drawImage(img, 0, 0)
         tex.needsUpdate = true
         requestAnimationFrame(draw)
@@ -30,7 +46,7 @@ function loadCardTexture(url, mat) {
       draw()
     }
     img.onerror = () => {
-      // load error
+      img.remove()
     }
     img.src = url
   } else {
