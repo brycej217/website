@@ -35,7 +35,7 @@ export class Camera {
 
     // gsap functions
     this.scrollTo = gsap.quickTo(this.camera.position, 'y', {
-      duration: 0.3,
+      duration: 0.15,
       ease: 'power1.out',
     })
   }
@@ -127,15 +127,22 @@ export class Camera {
     this.scrollTarget = y
     this.camera.position.y = y
     this.scrollTo = gsap.quickTo(this.camera.position, 'y', {
-      duration: 0.3,
+      duration: 0.15,
       ease: 'power1.out',
     })
+  }
+
+  // eases toward `y` like a normal scroll, instead of teleport()'s hard snap
+  // — for in-page jumps (e.g. the section navigator) that have no transition
+  // wipe covering an instant cut
+  scrollToY(y) {
+    this.scrollTarget = y
   }
 
   onScroll(event) {
     event.preventDefault()
 
-    const speed = 0.05
+    const speed = 0.02
     const y = event.deltaY
     this.scrollTarget -= y * speed
   }

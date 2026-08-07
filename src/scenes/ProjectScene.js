@@ -16,7 +16,7 @@ const projects = [
     id: 'glremix',
     name: 'glRemix',
     subtitle: 'A DX12 remastering platform for legacy OpenGL games.',
-    image: '/glremix.png',
+    image: '/glremix.gif',
     color: new THREE.Vector3(0, 0, 0), // teal
   },
   {
@@ -31,7 +31,7 @@ const projects = [
     id: 'cuda-path-tracer',
     name: 'CUDA Path Tracer',
     subtitle: 'A GPU-accelerated Monte Carlo path tracer written in CUDA.',
-    image: '/cuda.png',
+    image: '/cuda.gif',
     color: new THREE.Vector3(0, 0, 0), // magenta
   },
   {

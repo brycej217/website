@@ -17,8 +17,8 @@ const projectScene = new ProjectScene(app, {
   bounds: new THREE.Vector2(-5.0, -20.0),
 })
 const aboutScene = new AboutScene(app, {
-  position: new THREE.Vector3(0.0, -26.0, 0.0),
-  bounds: new THREE.Vector2(-20.0, -35.0),
+  position: new THREE.Vector3(0.0, -33.0, 0.0),
+  bounds: new THREE.Vector2(-20.0, -42.0),
 })
 
 const worldHtml = new WorldHtml(app)

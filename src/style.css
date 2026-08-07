@@ -57,12 +57,6 @@ body {
   pointer-events: none;
 }
 
-/* while inside a project write-up, the back button takes over this slot */
-#nav1.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
 #nav2 {
   position: absolute;
   top: 1rem;
@@ -338,7 +332,7 @@ body {
   font-size: 3.5rem;
   margin: 0 0 1.5rem;
   line-height: 1.1;
-  text-align: center;
+  text-align: left;
 }
 
 /* rendered markdown write-up (or the plain description, as a fallback) */
@@ -360,7 +354,7 @@ body {
 .page-body h1,
 .page-body h2,
 .page-body h3 {
-  font-family: 'MR', sans-serif;
+  font-family: 'IC', sans-serif;
   line-height: 1.2;
   margin: 1.75rem 0 0.75rem;
 }
@@ -404,6 +398,24 @@ body {
   display: block;
 }
 
+/* YouTube embed — swapped in for a youtube link/thumbnail by Page.js's
+   embedVideos(); a responsive 16:9 box regardless of viewport width */
+.page-video {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin: 0.5rem 0 1.1rem;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.page-video iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
 .page-body code {
   font-family: monospace;
   font-size: 0.9em;
@@ -432,13 +444,23 @@ body {
   color: rgba(255, 255, 255, 0.75);
 }
 
+/* tech pills and links on one row, left-aligned — links follow right after
+   the last pill rather than getting pushed to the far edge */
+.page-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 0 0 2.5rem;
+}
+
 .page-tech {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
   list-style: none;
   padding: 0;
-  margin: 0 0 2rem;
+  margin: 0;
   font-family: 'IC', sans-serif;
 }
 .page-tech li {
@@ -451,7 +473,6 @@ body {
 .page-links {
   display: flex;
   gap: 1.5rem;
-  margin: 2rem 0 2.5rem;
 }
 .page-link {
   font-family: 'IC', sans-serif;
@@ -464,6 +485,30 @@ body {
 }
 .page-link:hover {
   border-color: currentColor;
+}
+
+/* GitHub icon link — always the rightmost thing on the links line (see
+   Page.js, which appends it last regardless of data order) */
+.page-link-icon {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  opacity: 0.8;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+.page-link-icon:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+.page-link-icon img {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: block;
+  /* github.svg is a solid dark mark (#1B1F23) — flatten then invert to get
+     a clean white icon that reads against the dark page */
+  filter: brightness(0) invert(1);
 }
 
 /* project list buttons */
@@ -493,36 +538,55 @@ body {
   transform: translateX(6px);
 }
 
-/* back button — takes over #nav1's top-left slot while in a project (lives
-   outside #world-html so scrolling through a long write-up doesn't carry it
-   off-screen); hidden until PageManager toggles .visible on open/close */
-.back-btn {
+/* section navigator — lives outside #world-html (like #nav1/#nav2) so it
+   stays fixed on screen instead of scrolling away with the write-up; built
+   by PageManager.renderOutline() from the active page's headings and only
+   shown while a project is open */
+.page-nav {
   position: fixed;
-  top: 1rem;
-  left: 1rem;
-  font-family: 'MR', sans-serif;
-  font-size: 2rem;
-  line-height: 1;
-  color: white;
-  background: none;
-  border: none;
-  padding: 0.25rem 0.5rem;
-  cursor: pointer;
-  transition:
-    transform 0.3s,
-    opacity 0.3s;
-  pointer-events: none;
-  opacity: 0;
+  top: 25%;
+  left: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: 220px;
+  max-height: 70vh;
+  overflow-y: auto;
   z-index: 10;
-}
-.back-btn.visible {
-  pointer-events: auto;
-  opacity: 1;
-}
-/* locked out mid-transition too — same reasoning as #nav1.transitioning */
-.back-btn.transitioning {
+  opacity: 0;
   pointer-events: none;
+  transition: opacity 0.3s ease;
 }
-.back-btn:hover {
-  transform: translateX(-6px); /* slides left, reinforcing "back" */
+.page-nav.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.page-nav a {
+  font-family: 'IC', sans-serif;
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  padding-left: 0.75rem;
+  line-height: 1.3;
+  transition: border-color 0.2s ease;
+}
+.page-nav a:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+.page-nav-h1 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: white;
+}
+.page-nav-h2 {
+  font-size: 1rem;
+  margin-left: 1rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* the sidebar needs clear room to the left of .page's own max-width before
+   it can sit there without crowding the write-up */
+@media (max-width: 1150px) {
+  .page-nav {
+    display: none;
+  }
 }

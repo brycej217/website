@@ -52,7 +52,6 @@ export class App extends Emitter {
     this.tc.visible = false
     this.htmlOverlay = document.querySelector('#world-html')
     this.navEl = document.querySelector('#nav1')
-    this.backBtnEl = document.querySelector('#back')
   }
 
   transition(callback, destY = null, destColor = null) {
@@ -162,7 +161,6 @@ export class App extends Emitter {
 
     this.tl.eventCallback('onComplete', () => {
       this.navEl.classList.remove('transitioning')
-      this.backBtnEl.classList.remove('transitioning')
     })
   }
 
