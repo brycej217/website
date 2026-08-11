@@ -71,6 +71,28 @@ body {
   z-index: 10;
 }
 
+/* project page back button — sits below #nav1 rather than beside it, since
+   #nav1 (Home/Projects/About) stays on screen the whole time a project page
+   is open too; only shown while a page is active (see PageManager) */
+.page-back {
+  position: fixed;
+  top: 4.5rem;
+  left: 1rem;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.page-back.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* same race #nav1.transitioning guards against — see App.transition() */
+.page-back.transitioning {
+  opacity: 0;
+  pointer-events: none;
+}
+
 #world-html {
   z-index: 1;
 }
@@ -398,24 +420,6 @@ body {
   display: block;
 }
 
-/* YouTube embed — swapped in for a youtube link/thumbnail by Page.js's
-   embedVideos(); a responsive 16:9 box regardless of viewport width */
-.page-video {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  margin: 0.5rem 0 1.1rem;
-  border-radius: 8px;
-  overflow: hidden;
-}
-.page-video iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
 .page-body code {
   font-family: monospace;
   font-size: 0.9em;
@@ -487,10 +491,15 @@ body {
   border-color: currentColor;
 }
 
-/* GitHub icon link — always the rightmost thing on the links line (see
-   Page.js, which appends it last regardless of data order) */
-.page-link-icon {
+/* GitHub/YouTube icon links — always the rightmost thing on the links line
+   (see Page.js, which appends this group last regardless of data order) */
+.page-link-icons {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.page-link-icon {
   display: inline-flex;
   align-items: center;
   opacity: 0.8;
@@ -506,7 +515,7 @@ body {
   width: 1.75rem;
   height: 1.75rem;
   display: block;
-  /* github.svg is a solid dark mark (#1B1F23) — flatten then invert to get
+  /* github.svg/youtube.svg are solid dark marks — flatten then invert to get
      a clean white icon that reads against the dark page */
   filter: brightness(0) invert(1);
 }

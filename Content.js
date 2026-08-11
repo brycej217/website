@@ -25,7 +25,13 @@ export const content = [
       'A physically-based path tracer implemented in Vulkan, featuring a render graph, BRDF sampling, and full PBR material support. Renders offline images with importance sampling and multiple bounce global illumination.',
     md: '/np.md', // full write-up, rendered from public/np.md — see Page.js
     tech: ['Vulkan', 'GLSL', 'PBR', 'Path Tracing'],
-    links: [{ label: 'GitHub', url: 'https://github.com/brycej217/nptracer' }],
+    links: [
+      { label: 'GitHub', url: 'https://github.com/brycej217/nptracer' },
+      {
+        label: 'YouTube',
+        url: 'https://youtu.be/Qi0Pz44qmic?si=-RG6M0DrsKKBNxH3',
+      },
+    ],
   },
   {
     id: 'cuda-path-tracer',

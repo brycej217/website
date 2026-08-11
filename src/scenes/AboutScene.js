@@ -20,7 +20,10 @@ export class AboutScene extends Scene {
     // blob setup
     this.count = 5
     this.simBound = 2.0
-    this.sim = Blobs.sim(this.count, this.position.clone())
+    this.sim = Blobs.sim(
+      this.count,
+      this.position.clone().add(new THREE.Vector3(0, 1, 0)),
+    )
     this.blobOffset = app.allocateBlobSlots(this.count)
     app.on('update', (delta) => this.blobUpdate(delta))
   }

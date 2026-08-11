@@ -1,5 +1,4 @@
 import * as THREE from 'three'
-import gsap from 'gsap'
 
 export class Camera {
   constructor(app) {
@@ -21,10 +20,9 @@ export class Camera {
     this.raycaster = new THREE.Raycaster()
 
     // app event listeners
-    app.on('update', (delta) => this.update())
+    app.on('update', (delta) => this.update(delta))
 
     // event listeners for scroll
-    this.scroll = 0
     window.addEventListener('wheel', (event) => this.onScroll(event), {
       passive: false,
     })
@@ -32,20 +30,46 @@ export class Camera {
     // event listeners for mouse
     window.addEventListener('mousemove', (event) => this.onMouseMove(event))
     window.addEventListener('mousedown', (event) => this.onMouseDown(event))
-
-    // gsap functions
-    this.scrollTo = gsap.quickTo(this.camera.position, 'y', {
-      duration: 0.15,
-      ease: 'power1.out',
-    })
   }
 
   get() {
     return this.camera
   }
 
-  update() {
-    this.scrollTo(this.scrollTarget)
+  // pixels-per-world-unit at z=0 (where every scene's root sits), for the
+  // current viewport. WorldHtml converts world-Y into a CSS pixel offset to
+  // keep the DOM overlay scrolling in lockstep with the 3D scene, and needs
+  // this exact ratio to do it — a hand-picked constant only happens to
+  // match one particular window height (whatever it was tuned against) and
+  // is off everywhere else, which reads as the DOM and the 3D scene
+  // scrolling at two different rates.
+  pixelsPerUnit() {
+    const fovRad = (this.camera.fov * Math.PI) / 180
+    const visibleHeight = 2 * this.camera.position.z * Math.tan(fovRad / 2)
+    return this.canvas.clientHeight / visibleHeight
+  }
+
+  update(delta) {
+    // eased toward scrollTarget by hand, inside the same 'update' tick that
+    // drives everything else keyed off camera Y (WorldHtml, the blob
+    // shader's scrollY, the transition circle) — this used to be a
+    // gsap.quickTo() tween instead, which eases camera.position.y on gsap's
+    // own internal rAF ticker rather than this one. With continuous, small
+    // wheel deltas (macOS's default smooth scrolling) that second ticker
+    // stayed close enough to this one that the one-tick-of-lag between them
+    // was invisible. Switching macOS to line-based scrolling sends a few
+    // large deltas instead of many small ones, and that lag became a very
+    // visible one-frame stutter between the DOM overlay and the 3D scene —
+    // each was reading camera.position.y at a slightly different point in
+    // its easing, rather than the exact same value in the same frame.
+    // Easing manually here means every consumer reads one number, computed
+    // once, and there's nothing left to fall out of step. Exponential decay
+    // toward the target keeps it frame-rate independent — `tau` is the time
+    // constant (time to close ~63% of the remaining distance); three tau
+    // (~0.15s) roughly matches the old gsap tween's duration/feel.
+    const tau = 0.05
+    const ease = 1 - Math.exp(-delta / tau)
+    this.camera.position.y += (this.scrollTarget - this.camera.position.y) * ease
   }
 
   onMouseDown(event) {
@@ -123,13 +147,8 @@ export class Camera {
   }
 
   teleport(y) {
-    gsap.killTweensOf(this.camera.position)
     this.scrollTarget = y
     this.camera.position.y = y
-    this.scrollTo = gsap.quickTo(this.camera.position, 'y', {
-      duration: 0.15,
-      ease: 'power1.out',
-    })
   }
 
   // eases toward `y` like a normal scroll, instead of teleport()'s hard snap

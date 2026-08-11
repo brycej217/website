@@ -4,7 +4,6 @@ import { Camera } from './Camera'
 import { Blobs } from './Shaders'
 import { Scene } from './scenes/Scene'
 import { circle } from './Prefabs'
-import { PIXELS_PER_UNIT } from './WorldHtml'
 import './style.css'
 import gsap from 'gsap'
 
@@ -52,6 +51,7 @@ export class App extends Emitter {
     this.tc.visible = false
     this.htmlOverlay = document.querySelector('#world-html')
     this.navEl = document.querySelector('#nav1')
+    this.backEl = document.querySelector('#page-back')
   }
 
   transition(callback, destY = null, destColor = null) {
@@ -69,6 +69,7 @@ export class App extends Emitter {
     // mid-transition raced this one (two competing transition() calls); the
     // 'transitioning' class hides them and disables pointer-events via CSS
     this.navEl.classList.add('transitioning')
+    this.backEl?.classList.add('transitioning')
 
     // point circle at destination; fall back to current view if not provided
     this.transitionMat.uniforms.scrollY.value = destY ?? this.getY()
@@ -161,6 +162,7 @@ export class App extends Emitter {
 
     this.tl.eventCallback('onComplete', () => {
       this.navEl.classList.remove('transitioning')
+      this.backEl?.classList.remove('transitioning')
     })
   }
 
@@ -203,9 +205,9 @@ export class App extends Emitter {
 
       // bottom bound follows the active page's actual rendered height (it's
       const pageEl = this.pages?.active?.el
-      const viewportUnits =
-        this.renderer.domElement.clientHeight / PIXELS_PER_UNIT
-      const contentUnits = pageEl ? pageEl.scrollHeight / PIXELS_PER_UNIT : 0
+      const pxPerUnit = this.camera.pixelsPerUnit()
+      const viewportUnits = this.renderer.domElement.clientHeight / pxPerUnit
+      const contentUnits = pageEl ? pageEl.scrollHeight / pxPerUnit : 0
       const bottom = -100 - Math.max(0, contentUnits - viewportUnits) - 10
 
       this.camera.boundsCheck(top, bottom, null)
@@ -240,6 +242,7 @@ export class App extends Emitter {
 
     this.renderer.setSize(width, height, false)
     this.camera.resize(width, height)
+    this.emit('resize') // WorldHtml re-anchors its sections — see Camera.pixelsPerUnit()
 
     // refresh the shader's resolution uniform (drawing-buffer pixels)
     const plane = window.plane

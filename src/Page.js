@@ -10,10 +10,6 @@ function slugify(text) {
     .replace(/\s+/g, '-')
 }
 
-// matches youtu.be/ID, youtube.com/watch?v=ID, and youtube.com/embed/ID
-const YOUTUBE_RE =
-  /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{11})/
-
 export class Page {
   constructor(app, data) {
     this.app = app
@@ -57,14 +53,20 @@ export class Page {
         const nav = document.createElement('div')
         nav.className = 'page-links'
 
-        // GitHub renders as an icon (public/github.svg) rather than a text
-        // link, and always sits at the far right of the row regardless of
-        // where it falls in data.links — everything else renders first, in
-        // its original order, then the icon is appended last.
+        // GitHub and YouTube render as icons (public/github.svg,
+        // public/youtube.svg) rather than text links, and always sit
+        // together at the far right of the row regardless of where they
+        // fall in data.links — everything else renders first, in its
+        // original order, then the icons are appended last.
         let githubUrl = null
+        let youtubeUrl = null
         for (const { label, url } of this.data.links) {
           if (/^github$/i.test(label)) {
             githubUrl = url
+            continue
+          }
+          if (/^youtube$/i.test(label)) {
+            youtubeUrl = url
             continue
           }
           const a = document.createElement('a')
@@ -76,18 +78,20 @@ export class Page {
           nav.appendChild(a)
         }
 
-        if (githubUrl) {
-          const a = document.createElement('a')
-          a.href = githubUrl
-          a.target = '_blank'
-          a.rel = 'noopener'
-          a.className = 'page-link-icon'
-          a.setAttribute('aria-label', 'GitHub')
-          const img = document.createElement('img')
-          img.src = '/github.svg'
-          img.alt = 'GitHub'
-          a.appendChild(img)
-          nav.appendChild(a)
+        if (githubUrl || youtubeUrl) {
+          const icons = document.createElement('div')
+          icons.className = 'page-link-icons'
+          if (githubUrl) {
+            icons.appendChild(
+              this.buildIconLink(githubUrl, '/github.svg', 'GitHub'),
+            )
+          }
+          if (youtubeUrl) {
+            icons.appendChild(
+              this.buildIconLink(youtubeUrl, '/youtube.svg', 'YouTube demo'),
+            )
+          }
+          nav.appendChild(icons)
         }
 
         meta.appendChild(nav)
@@ -106,6 +110,21 @@ export class Page {
     return section
   }
 
+  // builds one icon-only link (GitHub, YouTube demo, ...) for the page-meta row
+  buildIconLink(url, src, label) {
+    const a = document.createElement('a')
+    a.href = url
+    a.target = '_blank'
+    a.rel = 'noopener'
+    a.className = 'page-link-icon'
+    a.setAttribute('aria-label', label)
+    const img = document.createElement('img')
+    img.src = src
+    img.alt = label
+    a.appendChild(img)
+    return a
+  }
+
   // loads the project's write-up from a markdown file in public/ (data.md) and
   // renders it into .page-body; falls back to the plain-text description if
   // there's no md file yet (or it fails to load)
@@ -116,7 +135,6 @@ export class Page {
         if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
         const md = await res.text()
         this.body.innerHTML = marked.parse(md)
-        this.embedVideos()
         this.buildOutline()
         return
       } catch (err) {
@@ -125,55 +143,6 @@ export class Page {
     }
 
     this.body.textContent = this.data.description ?? ''
-  }
-
-  // finds any link (or the broken linked-image markdown pattern people
-  // naturally paste a plain YouTube url into) pointing at a YouTube video
-  // and swaps it for an actual playable embed. Runs before buildOutline()
-  // since it can remove/replace nodes, but doesn't touch headings.
-  embedVideos() {
-    const candidates = this.body.querySelectorAll(
-      'a[href*="youtu"], img[src*="youtu"]',
-    )
-    const seen = new Set()
-
-    for (const el of candidates) {
-      const url = el.tagName === 'IMG' ? el.src : el.href
-      const match = url.match(YOUTUBE_RE)
-      if (!match) continue
-
-      const id = match[1]
-      if (seen.has(id)) {
-        el.remove() // e.g. the img nested inside the a of [![](url)](url)
-        continue
-      }
-      seen.add(id)
-
-      // collapse up to the outermost wrapper that contains *only* this link
-      // (typically the <p> around it) so no empty paragraph/anchor is left
-      // behind once it's replaced
-      let target = el
-      while (
-        target.parentElement &&
-        target.parentElement !== this.body &&
-        target.parentElement.childNodes.length === 1
-      ) {
-        target = target.parentElement
-      }
-
-      const wrap = document.createElement('div')
-      wrap.className = 'page-video'
-      const iframe = document.createElement('iframe')
-      iframe.src = `https://www.youtube.com/embed/${id}`
-      iframe.title = 'YouTube video player'
-      iframe.allow =
-        'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
-      iframe.referrerPolicy = 'strict-origin-when-cross-origin'
-      iframe.allowFullscreen = true
-      wrap.appendChild(iframe)
-
-      target.replaceWith(wrap)
-    }
   }
 
   // walks the rendered write-up's h1/h2s into a navigable outline (h2s nest

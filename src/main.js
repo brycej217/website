@@ -13,12 +13,12 @@ const homeScene = new HomeScene(app, {
   bounds: new THREE.Vector2(10.0, -5.0),
 })
 const projectScene = new ProjectScene(app, {
-  position: new THREE.Vector3(0.0, -13.0, 0.0),
+  position: new THREE.Vector3(0.0, -14.0, 0.0),
   bounds: new THREE.Vector2(-5.0, -20.0),
 })
 const aboutScene = new AboutScene(app, {
-  position: new THREE.Vector3(0.0, -33.0, 0.0),
-  bounds: new THREE.Vector2(-20.0, -42.0),
+  position: new THREE.Vector3(0.0, -28.0, 0.0),
+  bounds: new THREE.Vector2(-20.0, -33.0),
 })
 
 const worldHtml = new WorldHtml(app)

@@ -1,6 +1,5 @@
 import { Page } from './Page'
 import { content } from '../Content'
-import { PIXELS_PER_UNIT } from './WorldHtml'
 
 export class PageManager {
   constructor(app) {
@@ -13,9 +12,10 @@ export class PageManager {
     }
     this.active = null
     this.outlineEl = document.querySelector('#page-nav')
+    this.backEl = document.querySelector('#page-back')
 
     // teleport buttons
-    const navTargets = { home: 0, projects: -10, about: -32 }
+    const navTargets = { home: 0, projects: -11, about: -26.5 }
     for (const [id, y] of Object.entries(navTargets)) {
       document.querySelector(`#${id}`)?.addEventListener('click', (e) => {
         e.preventDefault()
@@ -25,6 +25,14 @@ export class PageManager {
         }, y)
       })
     }
+
+    // back button — returns to wherever the camera was before this page was
+    // opened (storedY), same wipe transition as the other nav links
+    this.backEl?.addEventListener('click', (e) => {
+      e.preventDefault()
+      if (!this.active) return
+      this.app.transition(() => this.close(), this.storedY)
+    })
   }
 
   open(id) {
@@ -39,12 +47,14 @@ export class PageManager {
     this.active = this.pages[id]
     this.active?.show()
     this.renderOutline(this.active)
+    this.backEl?.classList.add('visible')
   }
 
   close() {
     this.active?.hide()
     this.active = null
     this.renderOutline(null)
+    this.backEl?.classList.remove('visible')
 
     // tell app that we are back in scene mode and retrieve stored y
     this.app.inProject = false
@@ -93,7 +103,8 @@ export class PageManager {
 
     const desiredScreenY = 120
     const currentScreenY = el.getBoundingClientRect().top
-    const deltaY = (desiredScreenY - currentScreenY) / PIXELS_PER_UNIT
+    const deltaY =
+      (desiredScreenY - currentScreenY) / this.app.camera.pixelsPerUnit()
     this.app.camera.scrollToY(this.app.getY() + deltaY)
   }
 }
