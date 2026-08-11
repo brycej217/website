@@ -14,7 +14,15 @@ export class App extends Emitter {
     // canvas selection and renderer setup
     const canvas = document.querySelector('#viewport')
     this.renderer = new THREE.WebGLRenderer({ antialias: true, canvas })
-    this.renderer.setSize(window.innerWidth, window.innerHeight)
+    this.renderer.setPixelRatio(window.devicePixelRatio || 1)
+    // `false` here is load-bearing: the default (true) stamps a fixed
+    // inline width/height (in px) onto the canvas, which outranks the
+    // stylesheet's `#viewport { width: 100%; height: 100% }` and freezes
+    // canvas.clientWidth/clientHeight at whatever the window was on load.
+    // Every resize check downstream (this.resize(), Camera.pixelsPerUnit())
+    // reads from those, so with the inline size pinned, nothing ever
+    // detects a real resize or monitor switch again.
+    this.renderer.setSize(window.innerWidth, window.innerHeight, false)
     this.renderer.autoClear = false // allows for rendering multiple scenes at once
 
     // camera setup
@@ -52,6 +60,20 @@ export class App extends Emitter {
     this.htmlOverlay = document.querySelector('#world-html')
     this.navEl = document.querySelector('#nav1')
     this.backEl = document.querySelector('#page-back')
+
+    // besides the per-frame poll in update() (still needed to catch a
+    // monitor-switch that changes devicePixelRatio without firing a native
+    // resize event at all), also react to the browser's own resize event
+    // directly. The DOM's 100vh sections reflow instantly and synchronously
+    // the moment the window/monitor actually changes — no JS involved — but
+    // the 3D camera's projection matrix only updates when this.resize() next
+    // runs. Waiting on the once-per-frame poll means a real, if usually
+    // sub-frame, gap where the DOM has already reflowed to the new size and
+    // the 3D scene hasn't caught up yet; that gap can stretch to something
+    // actually visible if rAF stalls during the resize itself (common
+    // during an OS-level window drag between monitors), which reads as
+    // labels briefly "shifting" before settling into place.
+    window.addEventListener('resize', () => this.resize())
   }
 
   transition(callback, destY = null, destColor = null) {
@@ -163,6 +185,18 @@ export class App extends Emitter {
     this.tl.eventCallback('onComplete', () => {
       this.navEl.classList.remove('transitioning')
       this.backEl?.classList.remove('transitioning')
+
+      // the scene we just faded *away from* (this.currScene, captured above)
+      // only ever got faded to 0 — nothing in this timeline fades it back in,
+      // since only destScene gets that treatment. Left alone it stays
+      // invisible forever, including if the user later scrolls back to it by
+      // hand (normal scroll-cycling never touches opacity, only transition()
+      // does) rather than clicking another nav link. Same fix as the
+      // kill-recovery snap above, just run once this transition actually
+      // finishes instead of only defensively at the start of the next one.
+      for (const scene of Object.values(this.scenes)) {
+        if (scene.color) scene.opacity = 1
+      }
     })
   }
 
@@ -232,23 +266,30 @@ export class App extends Emitter {
     const canvas = this.renderer.domElement
     const width = canvas.clientWidth
     const height = canvas.clientHeight
+    // read live rather than the renderer's cached copy — dragging the
+    // window to a different monitor can change this without changing
+    // clientWidth/clientHeight at all (same CSS-pixel size, different
+    // backing scale), which the drawing-buffer comparison alone would miss
+    const pixelRatio = window.devicePixelRatio || 1
 
     // compare against the drawing-buffer size the renderer should have
     const needs =
-      canvas.width !== Math.floor(width * this.renderer.getPixelRatio()) ||
-      canvas.height !== Math.floor(height * this.renderer.getPixelRatio())
+      pixelRatio !== this.renderer.getPixelRatio() ||
+      canvas.width !== Math.floor(width * pixelRatio) ||
+      canvas.height !== Math.floor(height * pixelRatio)
 
     if (!needs) return
 
+    this.renderer.setPixelRatio(pixelRatio)
     this.renderer.setSize(width, height, false)
     this.camera.resize(width, height)
     this.emit('resize') // WorldHtml re-anchors its sections — see Camera.pixelsPerUnit()
 
-    // refresh the shader's resolution uniform (drawing-buffer pixels)
-    const plane = window.plane
-    if (plane) {
-      this.renderer.getDrawingBufferSize(this.uniforms.resolution.value)
-    }
+    // refresh the shader's resolution uniform (drawing-buffer pixels) — without
+    // this the blob raymarch keeps reading the launch-time canvas size, so its
+    // gl_FragCoord/resolution UV math (and therefore the whole background)
+    // skews and stretches out of proportion to the actual window after a resize
+    this.renderer.getDrawingBufferSize(this.uniforms.resolution.value)
   }
 
   // helper camera position getter

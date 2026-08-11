@@ -14,8 +14,11 @@ export class PageManager {
     this.outlineEl = document.querySelector('#page-nav')
     this.backEl = document.querySelector('#page-back')
 
-    // teleport buttons
-    const navTargets = { home: 0, projects: -11, about: -26.5 }
+    const navTargets = {
+      home: app.scenes.home.position.y,
+      projects: app.scenes.project.position.y + 5,
+      about: app.scenes.about.position.y + 1,
+    }
     for (const [id, y] of Object.entries(navTargets)) {
       document.querySelector(`#${id}`)?.addEventListener('click', (e) => {
         e.preventDefault()
@@ -70,14 +73,19 @@ export class PageManager {
 
   // (re)builds the section-navigator sidebar for `page` (or clears/hides it
   // for null); lives outside #world-html so it stays put on screen — see
-  // .page-nav — rather than scrolling away with the write-up
+  // .page-nav — rather than scrolling away with the write-up. Hiding it has
+  // to be quick — it has to finish disappearing on its own well before
+  // App.transition()'s wipe reveals the destination, since nothing else
+  // masks it during a scene switch — while showing it can ease in slower.
   renderOutline(page) {
     this.outlineEl.innerHTML = ''
 
     if (!page?.outline.length) {
+      this.outlineEl.style.transitionDuration = '0.12s'
       this.outlineEl.classList.remove('visible')
       return
     }
+    this.outlineEl.style.transitionDuration = '0.3s'
     this.outlineEl.classList.add('visible')
 
     for (const item of page.outline) {

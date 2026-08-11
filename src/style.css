@@ -152,6 +152,11 @@ body {
   -webkit-backdrop-filter: blur(2px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 20px;
+  /* scales with the 3D scene's own on-screen size (see
+     WorldHtml.updateWorldScale()) instead of staying this fixed rem/px
+     footprint on every monitor regardless of resolution */
+  transform: scale(var(--world-scale, 1));
+  transform-origin: center;
 }
 
 .about-photo {
@@ -265,6 +270,13 @@ body {
   box-sizing: border-box;
   color: white;
   text-align: center;
+  /* scales with the 3D scene's own on-screen size (see
+     WorldHtml.updateWorldScale()) instead of staying this fixed rem/px
+     footprint on every monitor regardless of resolution — otherwise a
+     small enough viewport lets the grid's now-relatively-larger fixed size
+     grow into the "PROJECTS" heading above it */
+  transform: scale(var(--world-scale, 1));
+  transform-origin: center;
 }
 
 /* flex (not grid) so a short last row — 5 cards is 3 + 2 — wraps centered
@@ -564,14 +576,20 @@ body {
   z-index: 10;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s ease;
+  /* duration is set inline by PageManager.renderOutline() (fast on the way
+     out, slower on the way in) — a same-element enter/exit split via two
+     class rules is ambiguous across browsers (which duration applies
+     depends on whether the "before" or "after" state's transition is used,
+     and that isn't consistent), so JS just pins it explicitly each time */
+  transition-property: opacity;
+  transition-timing-function: ease;
 }
 .page-nav.visible {
   opacity: 1;
   pointer-events: auto;
 }
 .page-nav a {
-  font-family: 'IC', sans-serif;
+  font-family: 'TP', sans-serif;
   text-decoration: none;
   border-left: 2px solid transparent;
   padding-left: 0.75rem;

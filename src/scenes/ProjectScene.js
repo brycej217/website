@@ -56,7 +56,7 @@ export class ProjectScene extends Scene {
     const name = this.add(
       'label',
       text('PROJECTS', { fontSize: 1.5, font: '/mr.ttf' }),
-      { interactable: false, position: new THREE.Vector3(0, 6, 0) },
+      { interactable: false, position: new THREE.Vector3(0, 8.25, 0) },
     )
 
     // blob setup
