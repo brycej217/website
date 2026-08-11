@@ -330,6 +330,25 @@ body {
   text-align: center;
 }
 
+/* same pill styling as .page-tech on the detail page, just smaller/centered
+   to fit the compact card */
+.project-card-tech {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-family: 'IC', sans-serif;
+}
+.project-card-tech li {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.75rem;
+}
+
 .project-card-subtitle {
   font-family: 'IC', sans-serif;
   font-size: 1.2rem;

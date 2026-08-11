@@ -3,28 +3,31 @@ export const content = [
     id: 'vulkan-engine',
     title: 'Vulkan Engine',
     description:
-      'A real-time rendering engine built in C++ and Vulkan featuring an entity-component-system architecture, a Hydra-based render delegate, and a modular render graph. Supports physically-based shading, deferred rendering, and dynamic resource management.',
-    tech: ['C++', 'Vulkan', 'GLSL', 'ECS'],
+      'A real-time rendering engine built in C++ and Vulkan utilizing an entity-component-system architecture.',
+    tech: ['C++', 'Vulkan', 'GLSL', 'glTF'],
+    md: '/vulkan/vulkan.md',
     links: [
-      { label: 'GitHub', url: 'https://github.com/brycej217/vulkan-engine' },
-      { label: 'Writeup', url: '#' },
+      { label: 'GitHub', url: 'https://github.com/brycej217/uncle-engine' },
     ],
   },
   {
     id: 'glremix',
     title: 'glRemix',
-    description:
-      'A real-time graphics project exploring [fill in]. Built to experiment with [technique], with a focus on [goal].',
-    tech: ['C++', 'OpenGL', 'GLSL'],
-    links: [{ label: 'GitHub', url: '#' }],
+    md: 'glremix/gl.md',
+    tech: ['C++', 'DX12', 'OpenGL', 'HLSL'],
+    links: [
+      { label: 'GitHub', url: 'https://github.com/glRemix/glRemix' },
+      {
+        label: 'YouTube',
+        url: 'https://youtu.be/bFBkLRBmGoY?si=xTCaDidjgyTFXXFn',
+      },
+    ],
   },
   {
     id: 'nptracer',
     title: 'NPTracer',
-    description:
-      'A physically-based path tracer implemented in Vulkan, featuring a render graph, BRDF sampling, and full PBR material support. Renders offline images with importance sampling and multiple bounce global illumination.',
-    md: '/np.md', // full write-up, rendered from public/np.md — see Page.js
-    tech: ['Vulkan', 'GLSL', 'PBR', 'Path Tracing'],
+    md: 'nptracer/np.md', // full write-up, rendered from public/np.md — see Page.js
+    tech: ['C++', 'Vulkan', 'Slang', 'Houdini'],
     links: [
       { label: 'GitHub', url: 'https://github.com/brycej217/nptracer' },
       {
@@ -36,17 +39,22 @@ export const content = [
   {
     id: 'cuda-path-tracer',
     title: 'CUDA Path Tracer',
-    description:
-      'A GPU-accelerated path tracer written in CUDA, leveraging parallel ray processing, stream compaction for ray termination, and material-based work sorting for performance.',
-    tech: ['CUDA', 'C++', 'Path Tracing'],
-    links: [{ label: 'GitHub', url: '#' }],
+    md: '/cuda/cuda.md',
+    tech: ['C++', 'CUDA'],
+    links: [
+      { label: 'GitHub', url: 'https://github.com/brycej217/CUDA-Path-Tracer' },
+    ],
   },
   {
     id: 'clustered-renderer',
     title: 'Clustered Renderer',
-    description:
-      'A clustered forward renderer supporting large numbers of dynamic lights by partitioning the view frustum into clusters and culling lights per cluster.',
-    tech: ['C++', 'Vulkan', 'GLSL'],
-    links: [{ label: 'GitHub', url: '#' }],
+    md: '/cluster/cluster.md',
+    tech: ['JavaScript', 'WebGPU', 'WGSL'],
+    links: [
+      {
+        label: 'GitHub',
+        url: 'https://github.com/brycej217/WebGPU-Forward-Plus-and-Clustered-Deferred-Renderer',
+      },
+    ],
   },
 ]

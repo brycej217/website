@@ -22,6 +22,9 @@ export class PageManager {
     for (const [id, y] of Object.entries(navTargets)) {
       document.querySelector(`#${id}`)?.addEventListener('click', (e) => {
         e.preventDefault()
+        // fade the sidebar out *before* the wipe starts, not mid-transition
+        // — see hideOutlineNow()
+        this.hideOutlineNow()
         this.app.transition(() => {
           this.close()
           this.app.camera.teleport(y)
@@ -34,6 +37,7 @@ export class PageManager {
     this.backEl?.addEventListener('click', (e) => {
       e.preventDefault()
       if (!this.active) return
+      this.hideOutlineNow()
       this.app.transition(() => this.close(), this.storedY)
     })
   }
@@ -49,14 +53,15 @@ export class PageManager {
     this.active?.hide()
     this.active = this.pages[id]
     this.active?.show()
-    this.renderOutline(this.active)
+    // sidebar reveal is gated behind armOutlineReveal() — see there
+    this.outlineArmed = false
     this.backEl?.classList.add('visible')
   }
 
   close() {
     this.active?.hide()
     this.active = null
-    this.renderOutline(null)
+    this.hideOutlineNow()
     this.backEl?.classList.remove('visible')
 
     // tell app that we are back in scene mode and retrieve stored y
@@ -64,27 +69,53 @@ export class PageManager {
     this.app.camera.teleport(this.storedY)
   }
 
+  // called once App.transition()'s wipe has fully finished — see
+  // ProjectScene's card click, which passes this as the transition's
+  // onComplete. The sidebar only reveals once this AND the write-up's
+  // outline (built asynchronously once its markdown fetch resolves — see
+  // onOutlineReady) are both ready, whichever finishes last. Without this
+  // gate, a markdown fetch that happened to resolve quickly could reveal
+  // the sidebar as early as open() itself — well before the wipe even
+  // finished covering the screen — instead of only once the destination is
+  // actually on screen.
+  armOutlineReveal() {
+    this.outlineArmed = true
+    this.revealOutlineIfReady()
+  }
+
   // called by Page once its markdown finishes loading — if that page is
   // already the one on screen (the fetch can resolve after open() ran),
   // refresh the sidebar so it doesn't sit empty
   onOutlineReady(page) {
-    if (this.active === page) this.renderOutline(page)
+    if (this.active === page) this.revealOutlineIfReady()
+  }
+
+  revealOutlineIfReady() {
+    if (!this.outlineArmed) return
+    this.renderOutline(this.active)
+  }
+
+  // hides the sidebar immediately — has to be quick, since it's outside
+  // #world-html (see .page-nav) so nothing else masks it while a scene
+  // transition is in flight; callers fade it out *before* starting
+  // App.transition() so it's already gone by the time the wipe begins,
+  // rather than fading out mid-transition
+  hideOutlineNow() {
+    this.outlineEl.innerHTML = ''
+    this.outlineEl.style.transitionDuration = '0.12s'
+    this.outlineEl.classList.remove('visible')
   }
 
   // (re)builds the section-navigator sidebar for `page` (or clears/hides it
   // for null); lives outside #world-html so it stays put on screen — see
-  // .page-nav — rather than scrolling away with the write-up. Hiding it has
-  // to be quick — it has to finish disappearing on its own well before
-  // App.transition()'s wipe reveals the destination, since nothing else
-  // masks it during a scene switch — while showing it can ease in slower.
+  // .page-nav — rather than scrolling away with the write-up
   renderOutline(page) {
-    this.outlineEl.innerHTML = ''
-
     if (!page?.outline.length) {
-      this.outlineEl.style.transitionDuration = '0.12s'
-      this.outlineEl.classList.remove('visible')
+      this.hideOutlineNow()
       return
     }
+
+    this.outlineEl.innerHTML = ''
     this.outlineEl.style.transitionDuration = '0.3s'
     this.outlineEl.classList.add('visible')
 

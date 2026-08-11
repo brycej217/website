@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { Scene } from './Scene'
 import { Blobs } from '../Shaders'
 import { text } from '../Prefabs'
+import { content } from '../../Content'
 import gsap from 'gsap'
 
 const projects = [
@@ -9,38 +10,38 @@ const projects = [
     id: 'vulkan-engine',
     name: 'Vulkan Engine',
     subtitle: 'A real-time game engine made with Vulkan.',
-    image: '/glremix.png',
-    color: new THREE.Vector3(0, 0, 0), // cyan-blue
+    image: 'vulkan/vulkan.gif',
+    color: new THREE.Vector3(0.1, 0.1, 0.1),
   },
   {
     id: 'glremix',
     name: 'glRemix',
     subtitle: 'A DX12 remastering platform for legacy OpenGL games.',
-    image: '/glremix.gif',
-    color: new THREE.Vector3(0, 0, 0), // teal
+    image: 'glremix/glremix.gif',
+    color: new THREE.Vector3(0, 0.37, 0.12),
   },
   {
     id: 'nptracer',
     name: 'NPTracer',
     subtitle:
       'A Vulkan pathtracer enabling simultaneous PBR and NPR stylization in 3D scenes.',
-    image: '/np.gif',
-    color: new THREE.Vector3(0.17, 0.24, 0.44), // green
+    image: 'nptracer/np.gif',
+    color: new THREE.Vector3(0.17, 0.24, 0.44),
   },
   {
     id: 'cuda-path-tracer',
     name: 'CUDA Path Tracer',
     subtitle: 'A GPU-accelerated Monte Carlo path tracer written in CUDA.',
-    image: '/cuda.gif',
-    color: new THREE.Vector3(0, 0, 0), // magenta
+    image: 'cuda/cuda.gif',
+    color: new THREE.Vector3(0.36, 0.32, 0.2),
   },
   {
     id: 'clustered-renderer',
     name: 'Clustered Renderer',
     subtitle:
       'A real-time WebGPU renderer implementing Forward+ and Clustered Deferred lighting.',
-    image: '/cluster.gif',
-    color: new THREE.Vector3(0, 0, 0), // indigo
+    image: 'cluster/cluster.gif',
+    color: new THREE.Vector3(0.65, 0.24, 0.38),
   },
 ]
 
@@ -110,6 +111,21 @@ export class ProjectScene extends Scene {
       title.textContent = proj.name
       card.appendChild(title)
 
+      // tech pills — sourced from Content.js (matching by id) rather than
+      // duplicated here, same as everything else that's kept in sync
+      // between the card grid and the detail page (see CLAUDE.md)
+      const tech = content.find((c) => c.id === proj.id)?.tech
+      if (tech?.length) {
+        const techList = document.createElement('ul')
+        techList.className = 'project-card-tech'
+        for (const t of tech) {
+          const li = document.createElement('li')
+          li.textContent = t
+          techList.appendChild(li)
+        }
+        card.appendChild(techList)
+      }
+
       const media = document.createElement('div')
       media.className = 'project-card-media'
       const img = document.createElement('img')
@@ -126,7 +142,14 @@ export class ProjectScene extends Scene {
       card.appendChild(subtitle)
 
       card.addEventListener('click', () =>
-        this.app.transition(() => this.projectClick(proj.id), -100, proj.color),
+        this.app.transition(
+          () => this.projectClick(proj.id),
+          -100,
+          proj.color,
+          // sidebar only reveals once the wipe has actually finished — see
+          // PageManager.armOutlineReveal()
+          () => this.app.pages.armOutlineReveal(),
+        ),
       )
 
       grid.appendChild(card)

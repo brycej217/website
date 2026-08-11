@@ -76,7 +76,7 @@ export class App extends Emitter {
     window.addEventListener('resize', () => this.resize())
   }
 
-  transition(callback, destY = null, destColor = null) {
+  transition(callback, destY = null, destColor = null, onComplete = null) {
     // killing an in-flight timeline can catch it mid-transition — after it
     // set its destination scene's opacity to 0 (to fade in behind the wipe)
     // but before its own fade-back-in ever ran. Left alone that scene would
@@ -197,6 +197,8 @@ export class App extends Emitter {
       for (const scene of Object.values(this.scenes)) {
         if (scene.color) scene.opacity = 1
       }
+
+      onComplete?.()
     })
   }
 
