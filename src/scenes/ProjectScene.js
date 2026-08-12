@@ -11,7 +11,7 @@ const projects = [
     name: 'glRemix',
     subtitle: 'A DX12 remastering platform for legacy OpenGL games.',
     image: 'glremix/glremix.gif',
-    color: new THREE.Vector3(0.1, 0.1, 0.1),
+    color: new THREE.Vector3(0.21, 0.18, 0.37),
   },
   {
     id: 'nptracer',
@@ -19,14 +19,14 @@ const projects = [
     subtitle:
       'A Vulkan pathtracer enabling simultaneous PBR and NPR stylization in 3D scenes.',
     image: 'nptracer/np.gif',
-    color: new THREE.Vector3(0.17, 0.24, 0.44),
+    color: new THREE.Vector3(0.18, 0.22, 0.37),
   },
   {
     id: 'cuda-path-tracer',
     name: 'CUDA Path Tracer',
     subtitle: 'A GPU-accelerated Monte Carlo path tracer written in CUDA.',
     image: 'cuda/cuda.gif',
-    color: new THREE.Vector3(0.36, 0.32, 0.2),
+    color: new THREE.Vector3(0.37, 0.32, 0.18),
   },
   {
     id: 'clustered-renderer',
@@ -34,7 +34,7 @@ const projects = [
     subtitle:
       'A real-time WebGPU renderer implementing Forward+ and Clustered Deferred lighting.',
     image: 'cluster/cluster.gif',
-    color: new THREE.Vector3(0.65, 0.24, 0.38),
+    color: new THREE.Vector3(0.37, 0.18, 0.28),
   },
   {
     id: 'vulkan-engine',
