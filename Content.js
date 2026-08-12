@@ -49,7 +49,7 @@ export const content = [
     id: 'clustered-renderer',
     title: 'Clustered Renderer',
     md: '/cluster/cluster.md',
-    tech: ['JavaScript', 'WebGPU', 'WGSL'],
+    tech: ['JavaSCcript', 'WebGPU', 'WGSL'],
     links: [
       {
         label: 'GitHub',

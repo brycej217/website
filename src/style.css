@@ -23,6 +23,9 @@ body {
   pointer-events: auto; /* but individual elements are interactive */
 }
 
+/* #loading-screen's own styling lives inline in index.html's <head>, not
+   here — see the comment there */
+
 @font-face {
   font-family: 'IC';
   src: url('/ic.ttf') format('truetype');
