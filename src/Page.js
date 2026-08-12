@@ -135,6 +135,7 @@ export class Page {
         if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
         const md = await res.text()
         this.body.innerHTML = marked.parse(md)
+        this.wrapSections()
         this.buildOutline()
         return
       } catch (err) {
@@ -145,16 +146,55 @@ export class Page {
     this.body.textContent = this.data.description ?? ''
   }
 
+  // groups the flat sequence of elements marked.parse() produces into nested
+  // .page-h1-section / .page-h2-section wrapper divs — everything from one
+  // heading up to (not including) the next heading of the same-or-higher
+  // level moves inside its wrapper, so each "# Heading" markdown section (and
+  // each "## Heading" subsection within it) shares one backdrop with its own
+  // body text instead of just the heading itself being boxed off (see
+  // .page-h1-section/.page-h2-section in style.css)
+  wrapSections() {
+    const frag = document.createDocumentFragment()
+    let h1Wrap = null
+    let h2Wrap = null
+
+    for (const node of Array.from(this.body.childNodes)) {
+      if (node.nodeName === 'H1') {
+        h1Wrap = document.createElement('div')
+        h1Wrap.className = 'page-h1-section'
+        h2Wrap = null
+        frag.appendChild(h1Wrap)
+      } else if (node.nodeName === 'H2') {
+        h2Wrap = document.createElement('div')
+        h2Wrap.className = 'page-h2-section'
+        const parent = h1Wrap ?? frag
+        parent.appendChild(h2Wrap)
+      }
+
+      const target = h2Wrap ?? h1Wrap ?? frag
+      target.appendChild(node)
+    }
+
+    this.body.replaceChildren(frag)
+  }
+
   // walks the rendered write-up's h1/h2s into a navigable outline (h2s nest
   // under whichever h1 they follow) and gives each heading a stable id to
   // scroll to. Runs after the markdown fetch resolves, so it notifies
   // PageManager directly in case this page is already the one on screen.
+  // Ids are prefixed with this page's own id — plain slugs collide across
+  // projects (every write-up has its own generic "# Overview"/"# Features"),
+  // and since every Page's DOM lives in #pages at once (only display:none'd,
+  // not removed), document.getElementById() would silently resolve to
+  // whichever project happened to build its DOM first rather than the one
+  // actually on screen — which is why H1 nav landed in the wrong place while
+  // H2 (whose headings are specific enough per-project not to collide) didn't.
   buildOutline() {
     const headings = this.body.querySelectorAll('h1, h2')
     const seen = new Set()
 
     this.outline = Array.from(headings).map((el) => {
-      let id = slugify(el.textContent)
+      let id = `${this.data.id}-${slugify(el.textContent)}`
       let unique = id || 'section'
       let n = 2
       while (seen.has(unique)) unique = `${id}-${n++}`

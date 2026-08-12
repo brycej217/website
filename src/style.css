@@ -142,7 +142,9 @@ body {
   padding-top: 8rem;
 }
 
-/* two columns on a frosted-glass panel, blurring the animated scene behind it */
+/* two columns on a frosted-glass-*looking* panel — no real backdrop-filter
+   blur (see .project-card below for why): the "glass" read comes from the
+   translucent tint + border alone */
 .about-inner {
   max-width: 900px;
   padding: 2.5rem;
@@ -150,9 +152,7 @@ body {
   display: flex;
   gap: 3rem;
   align-items: flex-start;
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 20px;
   /* scales with the 3D scene's own on-screen size (see
@@ -292,6 +292,13 @@ body {
   gap: 1.75rem;
 }
 
+/* no backdrop-filter here on purpose — 5 of these sit at once over a canvas
+   that's animating 100% of the time (the blob shader/sim never stops, even
+   scrolled off-screen — see HomeScene/ProjectScene/AboutScene), so a real
+   blur forces the compositor to resample all 5 every single frame. The
+   original WebGL project-card prefab (Prefabs.js) hit this same tradeoff and
+   deliberately used a translucent tint instead of a real blur for the same
+   reason — same fix here now that the cards are DOM. */
 .project-card {
   flex: 0 0 calc((100% - 3.5rem) / 3); /* 3.5rem = 2 gaps between 3 cards */
   max-width: calc((100% - 3.5rem) / 3);
@@ -299,9 +306,7 @@ body {
   flex-direction: column;
   gap: 0.6rem;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 20px;
   cursor: pointer;
@@ -411,8 +416,9 @@ body {
 .page-body h2,
 .page-body h3 {
   font-family: 'IC', sans-serif;
+  font-weight: 600;
   line-height: 1.2;
-  margin: 1.75rem 0 0.75rem;
+  margin: 0 0 1rem;
 }
 .page-body h1 {
   font-size: 1.9rem;
@@ -422,6 +428,29 @@ body {
 }
 .page-body h3 {
   font-size: 1.2rem;
+}
+
+/* each "# Heading" markdown section (glremix.md's "# Overview",
+   "# Implementation", etc. — separate from .page-title, which is the page's
+   own h1 outside .page-body) shares one subtle backdrop with its heading AND
+   everything under it, up to the next "#" section — see Page.wrapSections().
+   A "## Heading" subsection nests a second copy of the same faint backdrop
+   inside the first; stacked on top of each other, that reads as "a bit
+   darker" on its own without needing a second, hand-picked shade. */
+.page-h1-section {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  /* symmetric — .page-body :first-child above zeroes the top margin back out
+     when this is the very first thing in the write-up */
+  margin: 1.5rem 0;
+}
+
+.page-h2-section {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin: 1.25rem 0;
 }
 
 .page-body p {
@@ -452,6 +481,39 @@ body {
   border-radius: 8px;
   margin: 0.5rem 0 1.1rem;
   display: block;
+}
+/* images inside a table cell shouldn't carry the standalone-image margin —
+   the cell's own padding already spaces them out */
+.page-body td img,
+.page-body th img {
+  margin: 0;
+  border-radius: 4px;
+}
+
+/* GitHub renders tables with a border around every cell, a shaded header
+   row, and faint zebra striping — none of which come for free, since a
+   bare <table> has no border by default. `display: block` + `overflow-x:
+   auto` (also GitHub's own behavior) keeps a wide image-grid table from
+   blowing out .page's width on a narrow viewport instead of clipping it. */
+.page-body table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 0 0 1.1rem;
+  border-collapse: collapse;
+}
+.page-body th,
+.page-body td {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 0.9rem;
+}
+.page-body th {
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 600;
+}
+.page-body tr:nth-child(2n) {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .page-body code {

@@ -18,7 +18,7 @@ const projects = [
     name: 'glRemix',
     subtitle: 'A DX12 remastering platform for legacy OpenGL games.',
     image: 'glremix/glremix.gif',
-    color: new THREE.Vector3(0, 0.37, 0.12),
+    color: new THREE.Vector3(0.1, 0.1, 0.1),
   },
   {
     id: 'nptracer',
@@ -102,6 +102,8 @@ export class ProjectScene extends Scene {
     const grid = document.querySelector('#project-grid')
     if (!grid) return
 
+    const images = []
+
     for (const proj of projects) {
       const card = document.createElement('div')
       card.className = 'project-card'
@@ -130,11 +132,15 @@ export class ProjectScene extends Scene {
       media.className = 'project-card-media'
       const img = document.createElement('img')
       img.className = 'project-card-image'
-      img.src = proj.image
       img.alt = proj.name
-      img.loading = 'lazy'
+      img.decoding = 'async' // decode off the main thread instead of blocking layout/paint
+      // no `src` yet — observeCardImages() below attaches/detaches it based on
+      // whether the card is actually on screen, so the GIF only loads/decodes
+      // while visible instead of the moment this scene is constructed
+      img.dataset.src = proj.image
       media.appendChild(img)
       card.appendChild(media)
+      images.push(img)
 
       const subtitle = document.createElement('p')
       subtitle.className = 'project-card-subtitle'
@@ -154,6 +160,33 @@ export class ProjectScene extends Scene {
 
       grid.appendChild(card)
     }
+
+    this.observeCardImages(images)
+  }
+
+  // GIFs (some 15-20MB) keep decoding/animating forever once loaded — and
+  // #world-html never actually removes this section from the DOM, only
+  // translates it off-screen as the camera scrolls elsewhere, so without this
+  // all 5 would still be animating even miles away on Home or About. Detaching
+  // `src` while off-screen stops that immediately (no layout/paint side effects,
+  // unlike content-visibility: auto — that also clips anything overflowing the
+  // section's box, which cut the grid off); re-attaching it once back in view
+  // restarts the GIF from its first frame, which is cheap since it's cached.
+  observeCardImages(images) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const img = entry.target
+          if (entry.isIntersecting) {
+            if (img.src !== img.dataset.src) img.src = img.dataset.src
+          } else {
+            img.removeAttribute('src')
+          }
+        }
+      },
+      { rootMargin: '200px' }, // start/stop just before the card is exactly on screen
+    )
+    images.forEach((img) => io.observe(img))
   }
 
   projectClick(id) {

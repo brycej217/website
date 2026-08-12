@@ -215,10 +215,6 @@ export class Blobs {
             vec3 v = normalize(ro - p);
             vec3 r = reflect(-l, n);
 
-            float diff = max(dot(n, l), 0.0);
-            float diffuseStrength = 0.0;
-            vec3 base = b + diff * diffuseStrength * lightCol;
-
             float spec = pow(max(dot(v, r), 0.0), 32.0) * k;
             float f = step(0.01, spec);
 
