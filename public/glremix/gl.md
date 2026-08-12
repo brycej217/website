@@ -57,6 +57,8 @@ The application and path-traced DXR renderer comes equipped with the following r
 
 ## Shim Layer
 
+![diagram](/glremix/diagram.png)
+
 The `shim layer` intercepts OpenGL commands from the host application and writes them to a shared memory buffer via Windows interprocess communication.
 
 A file mapping object associate a file on disk with the virtual address space of your process(es), and a file view (virtual mem) makes accessible. The object is a OS kernel obj that manages the physical mem (file on disk).

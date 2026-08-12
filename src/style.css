@@ -476,11 +476,16 @@ body {
   text-decoration-color: currentColor;
 }
 
+/* inline-block (not block) — several write-ups (cuda.md, glremix's asset
+   table) put multiple <img>s inside one <p align="center">, relying on
+   images staying inline so they sit side by side as a comparison grid;
+   display: block forced each onto its own line and broke that */
 .page-body img {
+  display: inline-block;
+  vertical-align: top;
   max-width: 100%;
   border-radius: 8px;
-  margin: 0.5rem 0 1.1rem;
-  display: block;
+  margin: 0.5rem 0.4rem 1.1rem;
 }
 /* images inside a table cell shouldn't carry the standalone-image margin —
    the cell's own padding already spaces them out */
