@@ -7,13 +7,6 @@ import gsap from 'gsap'
 
 const projects = [
   {
-    id: 'vulkan-engine',
-    name: 'Vulkan Engine',
-    subtitle: 'A real-time game engine made with Vulkan.',
-    image: 'vulkan/vulkan.gif',
-    color: new THREE.Vector3(0.1, 0.1, 0.1),
-  },
-  {
     id: 'glremix',
     name: 'glRemix',
     subtitle: 'A DX12 remastering platform for legacy OpenGL games.',
@@ -42,6 +35,13 @@ const projects = [
       'A real-time WebGPU renderer implementing Forward+ and Clustered Deferred lighting.',
     image: 'cluster/cluster.gif',
     color: new THREE.Vector3(0.65, 0.24, 0.38),
+  },
+  {
+    id: 'vulkan-engine',
+    name: 'Vulkan Engine',
+    subtitle: 'A real-time game engine made with Vulkan.',
+    image: 'vulkan/vulkan.gif',
+    color: new THREE.Vector3(0.1, 0.1, 0.1),
   },
 ]
 
