@@ -27,10 +27,17 @@ export class Page {
     const section = document.createElement('section')
     section.className = 'page'
 
+    // title + tech pills/links share one backdrop (.page-header) rather than
+    // each getting its own — two adjacent boxes read as unrelated, one box
+    // reads as a single header
+    const header = document.createElement('div')
+    header.className = 'page-header'
+    section.appendChild(header)
+
     const h1 = document.createElement('h1')
     h1.className = 'page-title'
     h1.textContent = this.data.title
-    section.appendChild(h1)
+    header.appendChild(h1)
 
     // tech pills and links share one row, left-aligned (see .page-meta) —
     // so only build the row at all if either exists
@@ -97,7 +104,7 @@ export class Page {
         meta.appendChild(nav)
       }
 
-      section.appendChild(meta)
+      header.appendChild(meta)
     }
 
     // filled in by loadBody() once the write-up markdown (or fallback

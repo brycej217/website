@@ -29,29 +29,53 @@ export class WorldHtml {
   // positions each .world-section at its world-Y, converted through the
   // camera's current pixels-per-unit — re-run on resize since that ratio
   // depends on viewport height (see Camera.pixelsPerUnit()). A section tied
-  // to a registered scene (data-scene) reads that scene's actual position
-  // straight off app.scenes — the single place main.js defines it — rather
-  // than carrying its own hardcoded copy of the number, which is what let
-  // the two drift out of sync in the first place. The one section with no
-  // scene of its own (the project-page holding area) still uses a literal
-  // data-y.
+  // to a registered scene (data-scene) reads that scene's own anchorY when
+  // it has one — ProjectScene/AboutScene compute this as "right below my 3D
+  // label's actual rendered bottom edge" (see their anchorY getters), which
+  // is what actually keeps the DOM content from drifting away from its
+  // label at a resolution other than whatever this was last tuned against.
+  // Falls back to the scene's plain position.y for scenes with no such
+  // label-based anchor (or before one has finished its async layout) — and
+  // the one section with no scene of its own at all (the project-page
+  // holding area) still uses a literal data-y.
   anchorSections() {
     const pxPerUnit = this.app.camera.pixelsPerUnit()
     this.sections.forEach((el) => {
-      const worldY = el.dataset.scene
-        ? this.app.scenes[el.dataset.scene].position.y
-        : parseFloat(el.dataset.y)
+      let worldY
+      if (el.dataset.scene) {
+        const scene = this.app.scenes[el.dataset.scene]
+        worldY = scene.anchorY ?? scene.position.y
+      } else {
+        worldY = parseFloat(el.dataset.y)
+      }
       el.style.top = `${-worldY * pxPerUnit}px`
     })
   }
 
   // publishes the current pixels-per-unit, relative to the resolution this
   // site's rem/px-sized DOM panels were designed against, as a CSS variable
-  // — see REFERENCE_PIXELS_PER_UNIT above. .project-inner/.about-inner
-  // scale themselves by it so they shrink/grow in lockstep with the 3D
-  // scene instead of staying a fixed pixel size regardless of viewport.
+  // — see REFERENCE_PIXELS_PER_UNIT above. .project-inner/.about-inner cap
+  // their max-width by it (`calc(<base> * var(--world-scale))`) so their
+  // *layout footprint* shrinks/grows in lockstep with the 3D scene instead
+  // of staying a fixed pixel size regardless of viewport — deliberately not
+  // a `transform: scale()` on the whole panel, which used to scale its text
+  // too, double-shrinking it on top of that text's own width-based clamp()
+  // sizing in style.css. Text now sizes purely off those clamp() rules,
+  // untouched by this.
+  //
+  // Capped at 1 — pixelsPerUnit() depends only on viewport *height* (see
+  // Camera.pixelsPerUnit()), so a tall-but-narrow window (a maximized
+  // portrait monitor, a half-width split-screen on a tall display, ...)
+  // computes a scale well above 1, which would push max-width past panels'
+  // own base size (.project-inner's 1500px, e.g.) and out past the actual
+  // viewport width. Floored at 0.7 so a short viewport doesn't squeeze a
+  // panel's *layout* — independent of text now, but .about-photo/etc still
+  // need some minimum room to lay out sanely — down toward nothing.
   updateWorldScale() {
-    const scale = this.app.camera.pixelsPerUnit() / REFERENCE_PIXELS_PER_UNIT
+    const scale = Math.max(
+      0.7,
+      Math.min(1, this.app.camera.pixelsPerUnit() / REFERENCE_PIXELS_PER_UNIT),
+    )
     document.documentElement.style.setProperty('--world-scale', scale)
   }
 

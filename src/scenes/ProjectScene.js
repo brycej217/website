@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { Scene } from './Scene'
 import { Blobs } from '../Shaders'
-import { text } from '../Prefabs'
+import { text, fitViewport, labelLocalBottom } from '../Prefabs'
 import { content } from '../../Content'
 import gsap from 'gsap'
 
@@ -59,6 +59,28 @@ export class ProjectScene extends Scene {
       text('PROJECTS', { fontSize: 1.5, font: '/mr.ttf' }),
       { interactable: false, position: new THREE.Vector3(0, 8.25, 0) },
     )
+    fitViewport(app, name)
+    this.label = name
+    // world-unit breathing room between the label's bottom edge and the
+    // DOM grid's top — see anchorY() below
+    this.labelGap = 4
+    // ...and between the grid's bottom edge and this scene's own bottom
+    // bound (bounds.y) — the boundary Camera.boundsCheck()/App.transition
+    // use to decide when the background color starts shifting from this
+    // scene's to AboutScene's. baseBounds is the fixed span main.js
+    // authored; extendBounds() below only ever pushes bounds.y further past
+    // it, never back above it — see extendBounds().
+    this.bottomGap = 2.0
+    this.baseBounds = this.bounds.clone()
+    // manual, purely-cosmetic nudge to bounds.y on top of the automatic
+    // content-driven extension below — positive moves it up (less negative:
+    // this scene's active range ends sooner / AboutScene's begins sooner).
+    // AboutScene.bounds.x always reads this scene's bounds.y directly (see
+    // AboutScene.reposition()) rather than recomputing its own copy of this
+    // number, specifically so the two can never drift apart — a boundary
+    // Camera.boundsCheck() treats as a hard edge (see the note there) can't
+    // tolerate two independently-tuned values that only sometimes agree.
+    this.boundaryOffset = 3
 
     // blob setup
     this.count = 12
@@ -98,9 +120,54 @@ export class ProjectScene extends Scene {
     this.buildCards()
   }
 
+  // world-Y where DOM content for this scene should start — right below the
+  // "PROJECTS" label's actual rendered bottom edge, rather than at
+  // this.position.y (which WorldHtml used before this existed, and which
+  // only ever lined up with the label by coincidence — see anchorSections()
+  // in WorldHtml.js). Null until the label's own async layout lands.
+  get anchorY() {
+    const bottom = labelLocalBottom(this.label)
+    return bottom === null ? null : this.position.y + bottom - this.labelGap
+  }
+
+  // world-Y of the bottom of the actually-rendered project grid — measured
+  // fresh every call (grid height, and therefore this, changes with
+  // viewport width — see .project-card's breakpoints in style.css). Null
+  // until the label's own async layout lands, same as anchorY.
+  contentBottom(pxPerUnit) {
+    const anchor = this.anchorY
+    if (anchor === null) return null
+    const gridHeight = this.gridEl ? this.gridEl.scrollHeight / pxPerUnit : 0
+    return anchor - gridHeight
+  }
+
+  // extends bounds.y (this scene's bottom bound) to sit bottomGap below the
+  // grid's *actual* rendered bottom edge, if that's further down than the
+  // originally-authored bound — never pulls it back up above baseBounds.y,
+  // so a grid that fits within the original budget leaves this untouched.
+  // boundaryOffset is layered on top unconditionally (even before the label
+  // syncs), since it's a fixed manual nudge, not something that depends on
+  // measuring anything async.
+  //
+  // Returns how far past baseBounds.y the *automatic* (content-driven) part
+  // alone moved, deliberately excluding boundaryOffset — main.js's
+  // relayout() uses this to shift AboutScene's position, and a manual
+  // boundary nudge shouldn't drag that along (see boundaryOffset's comment,
+  // above, and AboutScene.reposition()).
+  extendBounds(pxPerUnit) {
+    const bottom = this.contentBottom(pxPerUnit)
+    const autoBottom =
+      bottom === null
+        ? this.baseBounds.y
+        : Math.min(this.baseBounds.y, bottom - this.bottomGap)
+    this.bounds.y = autoBottom + this.boundaryOffset
+    return autoBottom - this.baseBounds.y
+  }
+
   buildCards() {
     const grid = document.querySelector('#project-grid')
     if (!grid) return
+    this.gridEl = grid
 
     const images = []
 

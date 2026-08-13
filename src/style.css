@@ -3,6 +3,11 @@ body {
   margin: 0;
   height: 100%;
   background: #0b0d10;
+  overflow: hidden; /* scrolling is simulated via camera Y, not real document scroll */
+  /* the site owns scrolling itself (Camera's wheel/pointer handlers) —
+     without this, touch drag-scrolling also triggers the browser's own
+     pull-to-refresh/rubber-banding/pinch-zoom gestures underneath it */
+  touch-action: none;
 }
 
 #viewport,
@@ -47,7 +52,7 @@ body {
   top: 1rem;
   left: 1rem;
   display: flex;
-  gap: 1rem;
+  gap: clamp(0.5rem, 2.5vw, 1rem);
   pointer-events: auto;
   transition: opacity 0.2s ease;
 }
@@ -65,13 +70,22 @@ body {
   top: 1rem;
   right: 1rem;
   display: flex;
-  gap: 1rem;
+  gap: clamp(0.5rem, 2.5vw, 1rem);
   pointer-events: auto;
 }
 
 #nav1,
 #nav2 {
   z-index: 10;
+  /* #nav1 (3 links) and #nav2 (2 links) are two independently-anchored
+     (left vs right) groups, so neither can naturally push the other away —
+     capping each at less than half the viewport guarantees a gap between
+     them even at the narrowest phone widths, and flex-wrap is a last-resort
+     fallback if .nav-link's own clamp() below still doesn't leave enough
+     room */
+  max-width: 45%;
+  flex-wrap: wrap;
+  box-sizing: border-box;
 }
 
 /* project page back button — sits below #nav1 rather than beside it, since
@@ -102,7 +116,7 @@ body {
 
 .nav-link {
   font-family: 'TP', sans-serif;
-  font-size: 1.5rem;
+  font-size: clamp(0.85rem, 3.6vw, 1.5rem);
   color: white;
   text-decoration: none;
   transition: text-decoration 0.3s;
@@ -140,30 +154,70 @@ body {
 .page-section {
   align-items: flex-start;
   padding-top: 8rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  box-sizing: border-box;
+}
+
+/* project/about content used to rely on .world-section's base vertical
+   centering to land near its 3D label above — which only worked by
+   coincidence, when the content happened to be about one viewport tall.
+   WorldHtml now positions these sections at the scene's own anchorY (see
+   ProjectScene/AboutScene's anchorY getters) — right below the label's
+   *actual* rendered bottom edge, at any resolution — so the section's own
+   top is already the correct start point; centering it inside the box on
+   top of that would just push it back down off that mark. Top-aligned with
+   a little breathing room is what actually keeps content pinned under its
+   label instead of drifting from it as the project grid's height changes
+   with viewport width. */
+.world-section[data-scene] {
+  align-items: flex-start;
+  padding-top: 1.5rem;
+  /* a guaranteed side gutter for the section itself — .about-inner's own
+     padding is *inside* the panel, so without this it can end up flush
+     against the actual screen edge: it has no explicit width, and at a
+     viewport narrower than its 900px max-width but not narrow enough to
+     hit the 720px column-layout breakpoint, it has nowhere left to shrink
+     to. .project-inner doesn't strictly need this (it already pads itself
+     — see its own `padding` rule), but it's harmless there too. */
+  padding-left: 1rem;
+  padding-right: 1rem;
+  box-sizing: border-box;
 }
 
 /* two columns on a frosted-glass-*looking* panel — no real backdrop-filter
    blur (see .project-card below for why): the "glass" read comes from the
    translucent tint + border alone */
 .about-inner {
-  max-width: 900px;
-  padding: 2.5rem;
+  /* scales the panel's footprint with the 3D scene's own on-screen size
+     (see WorldHtml.updateWorldScale()) instead of staying a fixed rem/px
+     size on every monitor regardless of resolution — as a max-width, not a
+     transform: scale() on the whole panel like this used to be. A transform
+     scales its text too, which already has its own width-based clamp()
+     sizing below (.about-heading/.about-body) — stacking a *second*,
+     height-driven shrink on top of that compounded into illegibly small
+     text on a short-but-not-narrow viewport. max-width only ever
+     constrains layout, so text now sizes purely off clamp(), unaffected by
+     viewport height. */
+  max-width: calc(900px * var(--world-scale, 1));
+  padding: clamp(1.2rem, 5vw, 2rem);
+  box-sizing: border-box;
   color: white;
   display: flex;
-  gap: 3rem;
+  gap: clamp(1.5rem, 5vw, 3rem);
   align-items: flex-start;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 20px;
-  /* scales with the 3D scene's own on-screen size (see
-     WorldHtml.updateWorldScale()) instead of staying this fixed rem/px
-     footprint on every monitor regardless of resolution */
-  transform: scale(var(--world-scale, 1));
-  transform-origin: center;
 }
 
 .about-photo {
-  flex: 0 0 260px;
+  /* shrinkable (flex-shrink: 1, the middle 0 -> 1 vs. the old 0 0 260px)
+     — .about-inner's max-width now scales with --world-scale (see there),
+     and a photo that refuses to shrink below 260px could force the panel
+     wider than that or crowd .about-content into an unreasonably narrow
+     sliver on a short viewport */
+  flex: 0 1 260px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -186,7 +240,7 @@ body {
 
 .about-heading {
   font-family: 'MR', sans-serif;
-  font-size: 2.75rem;
+  font-size: clamp(2rem, 6vw, 2.75rem);
   margin: 0;
   line-height: 1.1;
   text-align: center;
@@ -194,7 +248,7 @@ body {
 
 .about-body {
   font-family: 'IC', sans-serif;
-  font-size: 1.5rem;
+  font-size: clamp(1rem, 2.6vw, 1.5rem);
   line-height: 1.7;
   margin: 0 0 1.25rem;
   max-width: 55ch; /* caps line length for readability */
@@ -268,18 +322,21 @@ body {
    which is what browsers require to keep advancing an animated image) */
 .project-inner {
   width: 100%;
-  max-width: 1500px;
-  padding: 0 2rem;
-  box-sizing: border-box;
-  color: white;
-  text-align: center;
   /* scales with the 3D scene's own on-screen size (see
      WorldHtml.updateWorldScale()) instead of staying this fixed rem/px
      footprint on every monitor regardless of resolution — otherwise a
      small enough viewport lets the grid's now-relatively-larger fixed size
-     grow into the "PROJECTS" heading above it */
-  transform: scale(var(--world-scale, 1));
-  transform-origin: center;
+     grow into the "PROJECTS" heading above it. A max-width, not a
+     transform: scale() on the whole grid like this used to be — a
+     transform shrinks .project-card-title/-subtitle's text too, which
+     already has its own width-based clamp() sizing, and stacking a
+     *second*, height-driven shrink on top compounded past legible on a
+     short-but-not-narrow viewport. */
+  max-width: calc(1500px * var(--world-scale, 1));
+  padding: 0 clamp(0.75rem, 4vw, 2rem);
+  box-sizing: border-box;
+  color: white;
+  text-align: center;
 }
 
 /* flex (not grid) so a short last row — 5 cards is 3 + 2 — wraps centered
@@ -289,7 +346,7 @@ body {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 1.75rem;
+  gap: clamp(1rem, 4vw, 1.75rem);
 }
 
 /* no backdrop-filter here on purpose — 5 of these sit at once over a canvas
@@ -304,8 +361,9 @@ body {
   max-width: calc((100% - 3.5rem) / 3);
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  padding: 1rem;
+  gap: clamp(0.4rem, 1.5vw, 0.6rem);
+  padding: clamp(0.75rem, 3vw, 1rem);
+  box-sizing: border-box;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 20px;
@@ -333,7 +391,7 @@ body {
 
 .project-card-title {
   font-family: 'MR', sans-serif;
-  font-size: 1.8rem;
+  font-size: clamp(1.2rem, 4vw, 1.8rem);
   margin: 0;
   text-align: center;
 }
@@ -359,7 +417,7 @@ body {
 
 .project-card-subtitle {
   font-family: 'IC', sans-serif;
-  font-size: 1.2rem;
+  font-size: clamp(0.95rem, 2.8vw, 1.2rem);
   line-height: 1.5;
   margin: 0;
   text-align: center;
@@ -379,27 +437,56 @@ body {
   }
 }
 
+/* #pages (the plain <div> App.js/PageManager mount every Page.el into) had
+   no width rule of its own, so as a flex item of .page-section (a row, via
+   .world-section's base display:flex) its default flex:0 1 auto sizing let
+   it — and .page inside it, which only ever had a *max*-width — shrink-wrap
+   to its content's own preferred width instead of the actual viewport.
+   That preferred width is essentially fixed (close to 960px) regardless of
+   how narrow the real viewport is; #overlay's overflow:hidden then silently
+   clipped whatever didn't fit, which read as "the page takes up some fixed
+   width and its content gets cut off" with no visible cause. Forcing both
+   to width:100% (capped by .page's own max-width, centered via margin auto)
+   makes that width follow the viewport like every other panel on the site. */
+#pages {
+  width: 100%;
+}
+
 .page {
+  width: 100%;
   max-width: 960px;
-  padding: 2.5rem;
+  margin: 0 auto;
+  padding: clamp(1.25rem, 5vw, 2.5rem);
   color: white;
   border-radius: 16px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   box-sizing: border-box;
 }
 
+/* title + tech pills/links (.page-meta) share this one backdrop — same
+   subtle treatment .page-h1-section gives every in-body "# Heading" (see
+   below) — rather than each getting its own separate box, which read as two
+   unrelated panels instead of a single header. Built by Page.js's build()
+   as one wrapper (.page-header) around both, not just adjacent CSS. */
+.page-header {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  margin: 0 0 1.5rem;
+}
+
 .page-title {
   font-family: 'MR', sans-serif;
-  font-size: 3.5rem;
-  margin: 0 0 1.5rem;
+  font-size: clamp(2rem, 7vw, 3.5rem);
   line-height: 1.1;
   text-align: left;
+  margin: 0;
 }
 
 /* rendered markdown write-up (or the plain description, as a fallback) */
 .page-body {
   font-family: 'IC', sans-serif;
-  font-size: 1.15rem;
+  font-size: clamp(0.95rem, 2.2vw, 1.15rem);
   line-height: 1.7;
   margin: 0 0 1.5rem;
   max-width: 80ch;
@@ -550,13 +637,14 @@ body {
 }
 
 /* tech pills and links on one row, left-aligned — links follow right after
-   the last pill rather than getting pushed to the far edge */
+   the last pill rather than getting pushed to the far edge. Backdrop lives
+   on the shared .page-header wrapper (above), not here. */
 .page-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 1.5rem;
-  margin: 0 0 2.5rem;
+  margin-top: 1rem;
 }
 
 .page-tech {

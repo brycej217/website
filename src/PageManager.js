@@ -14,14 +14,20 @@ export class PageManager {
     this.outlineEl = document.querySelector('#page-nav')
     this.backEl = document.querySelector('#page-back')
 
+    // resolved at click time, not cached here — AboutScene.position.y can
+    // shift after this constructor runs (see main.js's relayout(), which
+    // pushes it down to clear a tall project grid), and a target cached
+    // before that shift would teleport the camera to where "about" used to
+    // be instead of where it actually ended up
     const navTargets = {
-      home: app.scenes.home.position.y,
-      projects: app.scenes.project.position.y + 5,
-      about: app.scenes.about.position.y + 1,
+      home: () => app.scenes.home.position.y,
+      projects: () => app.scenes.project.position.y + 5,
+      about: () => app.scenes.about.position.y + 1,
     }
-    for (const [id, y] of Object.entries(navTargets)) {
+    for (const [id, getY] of Object.entries(navTargets)) {
       document.querySelector(`#${id}`)?.addEventListener('click', (e) => {
         e.preventDefault()
+        const y = getY()
         // fade the sidebar out *before* the wipe starts, not mid-transition
         // — see hideOutlineNow()
         this.hideOutlineNow()
