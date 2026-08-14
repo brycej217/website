@@ -13,7 +13,7 @@ export class HomeScene extends Scene {
     this.app.uniforms.color.value.copy(this.color) // set initial color
 
     // blob setup — slot allocation makes this sim run persistently alongside other scenes
-    this.count = 32
+    this.count = 30
     this.simBound = 2.0
     this.sim = Blobs.sim(this.count, new THREE.Vector3(0, 0, 0))
     this.blobOffset = app.allocateBlobSlots(this.count)
@@ -102,10 +102,13 @@ export class HomeScene extends Scene {
 
   blobUpdate(delta) {
     const blobs = this.app.uniforms.blobs.value
+    // velocities in Blobs.sim() are tuned as units/frame at 60fps — scale by
+    // delta*60 so motion speed is real-time, not tied to the render's fps
+    const step = delta * 60
 
     for (let i = 0; i < this.count; ++i) {
       const { pos, velocity } = this.sim[i]
-      pos.add(velocity)
+      pos.addScaledVector(velocity, step)
       if (pos.x > this.simBound || pos.x < -this.simBound)
         velocity.x = -velocity.x
       if (pos.y > this.simBound || pos.y < -this.simBound)

@@ -102,10 +102,13 @@ export class AboutScene extends Scene {
 
   blobUpdate(delta) {
     const blobs = this.app.uniforms.blobs.value
+    // velocities in Blobs.sim() are tuned as units/frame at 60fps — scale by
+    // delta*60 so motion speed is real-time, not tied to the render's fps
+    const step = delta * 60
 
     for (let i = 0; i < this.count; ++i) {
       const { pos, velocity } = this.sim[i]
-      pos.add(velocity)
+      pos.addScaledVector(velocity, step)
       if (pos.x > this.simBound || pos.x < -this.simBound)
         velocity.x = -velocity.x
       if (pos.y > this.simBound || pos.y < -this.simBound)

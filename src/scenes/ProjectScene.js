@@ -264,13 +264,16 @@ export class ProjectScene extends Scene {
 
   blobUpdate(delta) {
     const blobs = this.app.uniforms.blobs.value
+    // velocities in Blobs.projectSim() are tuned as units/frame at 60fps —
+    // scale by delta*60 so motion speed is real-time, not tied to the render's fps
+    const step = delta * 60
 
     for (let i = 0; i < this.count; ++i) {
       const s = this.sim[i]
       const blob = blobs[this.blobOffset + i]
 
       if (!s.fading) {
-        s.pos.add(s.velocity)
+        s.pos.addScaledVector(s.velocity, step)
 
         // blobs live in world space, spawned around this.position — so
         // every bound has to be checked relative to that, not absolute

@@ -12,6 +12,9 @@ export class Blobs {
 
     this.material = new THREE.ShaderMaterial({
       uniforms: {
+        // aabb uniforms
+        bmin: { value: new THREE.Vector3() },
+        bmax: { value: new THREE.Vector3() },
         // blob uniforms
         blobs: {
           value: Array.from({ length: this.MAX_BLOBS }, () => ({
@@ -38,6 +41,21 @@ export class Blobs {
   update(delta) {
     this.material.uniforms.time.value = this.app.time
 
+    // update uniform aabbs
+    const blobs = this.material.uniforms.blobs.value
+    const count = this.material.uniforms.count.value
+
+    const bmin = this.material.uniforms.bmin.value
+    const bmax = this.material.uniforms.bmax.value
+    bmin.set(Infinity, Infinity, Infinity)
+    bmax.set(-Infinity, -Infinity, -Infinity)
+
+    for (let i = 0; i < count; ++i) {
+      const b = blobs[i]
+      bmin.min(b.center.clone().subScalar(b.radius))
+      bmax.max(b.center.clone().addScalar(b.radius))
+    }
+
     const y = this.app.getY()
     this.material.uniforms.scrollY.value = y
     this.plane.position.y = y
@@ -58,7 +76,7 @@ export class Blobs {
 
   // returns array of ball sims that can be modified by other classes
   static sim(count, position) {
-    const speed = 0.005
+    const speed = 0.004
     return Array.from({ length: count }, () => ({
       pos: new THREE.Vector3().random().subScalar(0.5).add(position), // map [0, 1) -> [-0.5, 0.5)
       velocity: new THREE.Vector3()
@@ -109,6 +127,10 @@ export class Blobs {
         vec3  center;
         float radius;
     };
+
+    // aabb uniforms
+    uniform vec3 bmin;
+    uniform vec3 bmax;
 
     // blob uniforms
     uniform Blob blobs[${this.MAX_BLOBS}];
@@ -163,6 +185,17 @@ export class Blobs {
     return normalize(v1 - v2);
     }
 
+    vec2 hitAABB(vec3 ro, vec3 rd, vec3 lo, vec3 hi) 
+    {
+      vec3 inv = 1.0 / rd;
+      vec3 t0 = (lo - ro) * inv;
+      vec3 t1 = (hi - ro) * inv;
+      vec3 tmin = min(t0, t1);
+      vec3 tmax = max(t0, t1);
+      return vec2(max(max(tmin.x, tmin.y), tmin.z),
+                  min(min(tmax.x, tmax.y), tmax.z));
+    }
+
     void main()
     {
         /*
@@ -188,23 +221,74 @@ export class Blobs {
         vec3 ro = vec3(0, scrollY, -3); // ray origin
         vec3 rd = normalize(vec3(uv, 1)); // ray direction
 
-        float t = 0.0;
+        vec3 pad = vec3(1.0);
+        vec2 tb = hitAABB(ro, rd, bmin - pad, bmax + pad);
+        if (tb.x > tb.y || tb.y < 0.0) 
+        {
+            gl_FragColor = vec4(color, 1.0);
+            return;
+        }
+
+       float t = max(tb.x, 0.0);
+        // grazing/near-tangent rays are the pathology: a shallow-angle ray can
+        // stay just outside every blob for a long stretch, taking tiny SDF
+        // values without ever hitting the fixed epsilon, and crawl for the
+        // whole step budget. MAX_DIST is an unconditional distance cap (on top
+        // of the AABB exit) that bails such rays out to background instead of
+        // burning steps on them.
+        const float MAX_DIST = 60.0;
+        float tMax = min(tb.y, MAX_DIST); // finite backstop in case the box is ever degenerate
         float d = 0.0;
-        vec3 p = ro; // initial point to be iterated
+        vec3 p;
+
+        // pixel footprint at unit distance — uv spans [-1, 1] over resolution.y
+        // pixels and rd is built from vec3(uv, 1), so this approximates the
+        // angular size of one pixel, used below to relax the hit epsilon with
+        // distance instead of a fixed tiny threshold
+        float pixelRadius = 1.0 / resolution.y;
+        float eps = 0.001;
+
+        // over-relaxed sphere tracing (Keinert et al. 2014, "Enhanced Sphere
+        // Tracing"): step by omega*d instead of d — converges in meaningfully
+        // fewer iterations on typical scenes. omega > 1 risks stepping past a
+        // surface where two consecutive conservative spheres don't overlap; when
+        // that's detected (sorFail) we retreat by the overshoot and drop back to
+        // a plain, non-relaxed step until the next reliable stride.
+        float omega = 1.5;
+        float prevRadius = 0.0;
+        float stepLength = 0.0;
 
         // raymarching
         for (int i = 0; i < 80; ++i)
         {
             p = ro + rd * t; // position along ray (based on distance traveled)
             d = map(p); // current distance to the scene
-            t += d; // march (we can travel safely d along the ray confirmed)
 
-            // early exits
-            if (d < 0.001 || t > 100.0) break;
+            bool sorFail = omega > 1.0 && (d + prevRadius) < stepLength;
+            if (sorFail)
+            {
+                stepLength -= omega * stepLength; // retreat by the overshoot
+                omega = 1.0;
+            }
+            else
+            {
+                stepLength = d * omega;
+            }
+            prevRadius = d;
+
+            // adaptive epsilon: as t grows, a grazing ray that's merely close
+            // (rather than converging to 0) is accepted as a hit once it's
+            // within a sub-pixel margin — this is what actually stops the
+            // crawl, since a fixed 0.001 threshold is what a tangent ray can
+            // spend its whole budget failing to reach
+            eps = max(0.001, pixelRadius * t);
+            if (!sorFail && d < eps) break;
+            t += stepLength;
+            if (t > tMax) break;  // left the box / past the distance cap
         }
 
         // if surface was hit perform lighting calculations
-        if (d < 0.001) 
+        if (d < eps)
         {
             vec3 lightDir = vec3(cos(time) * 0.5, sin(time) * 0.5, cos(time) * 0.5);
             vec3 lightCol = vec3(1.0);

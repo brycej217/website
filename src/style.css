@@ -74,6 +74,18 @@ body {
   pointer-events: auto;
 }
 
+#fps {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  pointer-events: none; /* display-only, never intercepts clicks */
+  z-index: 10;
+}
+
 #nav1,
 #nav2 {
   z-index: 10;

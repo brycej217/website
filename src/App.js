@@ -11,10 +11,19 @@ export class App extends Emitter {
   constructor() {
     super()
 
+    // caps the renderer's drawing-buffer resolution regardless of native
+    // device pixel ratio — see the comment in resize() for why
+    this.MAX_RENDER_HEIGHT = 1080
+
     // canvas selection and renderer setup
     const canvas = document.querySelector('#viewport')
     this.renderer = new THREE.WebGLRenderer({ antialias: true, canvas })
-    this.renderer.setPixelRatio(window.devicePixelRatio || 1)
+    this.renderer.setPixelRatio(
+      Math.min(
+        window.devicePixelRatio || 1,
+        this.MAX_RENDER_HEIGHT / window.innerHeight,
+      ),
+    )
     // `false` here is load-bearing: the default (true) stamps a fixed
     // inline width/height (in px) onto the canvas, which outranks the
     // stylesheet's `#viewport { width: 100%; height: 100% }` and freezes
@@ -60,6 +69,12 @@ export class App extends Emitter {
     this.htmlOverlay = document.querySelector('#world-html')
     this.navEl = document.querySelector('#nav1')
     this.backEl = document.querySelector('#page-back')
+
+    // fps tracker — averaged over a short window rather than shown raw
+    // per-frame, since a per-frame readout is too jittery to actually read
+    this.fpsEl = document.querySelector('#fps')
+    this.fpsFrames = 0
+    this.fpsElapsed = 0
 
     // besides the per-frame poll in update() (still needed to catch a
     // monitor-switch that changes devicePixelRatio without firing a native
@@ -225,6 +240,17 @@ export class App extends Emitter {
     const delta = this.timer.getDelta()
     this.time += delta
 
+    // fps tracker — refresh the readout a few times a second instead of
+    // every frame
+    this.fpsFrames++
+    this.fpsElapsed += delta
+    if (this.fpsElapsed >= 0.25) {
+      const fps = this.fpsFrames / this.fpsElapsed
+      //this.fpsEl.textContent = `${Math.round(fps)} FPS`
+      this.fpsFrames = 0
+      this.fpsElapsed = 0
+    }
+
     // emit update event
     this.emit('update', delta)
 
@@ -272,7 +298,17 @@ export class App extends Emitter {
     // window to a different monitor can change this without changing
     // clientWidth/clientHeight at all (same CSS-pixel size, different
     // backing scale), which the drawing-buffer comparison alone would miss
-    const pixelRatio = window.devicePixelRatio || 1
+    const rawPixelRatio = window.devicePixelRatio || 1
+
+    // cap the drawing-buffer resolution — the canvas's CSS size (100vw/100vh,
+    // see #viewport in style.css) is untouched, so this only shrinks how many
+    // pixels the raymarched background actually has to shade per frame, not
+    // its on-screen size; the GPU upscales the framebuffer to fill the
+    // viewport same as it would any lower-res texture. A 2x/3x-DPR display
+    // would otherwise multiply the raymarcher's fragment cost by 4x/9x for a
+    // background this soft — never worth it. Only ever scales resolution
+    // down from native, never up (Math.min against rawPixelRatio).
+    const pixelRatio = Math.min(rawPixelRatio, this.MAX_RENDER_HEIGHT / height)
 
     // compare against the drawing-buffer size the renderer should have
     const needs =
