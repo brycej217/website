@@ -42,7 +42,7 @@ This is done by replacing the Window's opengl.dll in the host app’s .exe locat
 
 # Features
 
-<img src="glremix/splash.png">
+<img src="/glremix/splash.png">
 
 The application and path-traced DXR renderer comes equipped with the following rendering features:
 
@@ -124,12 +124,12 @@ The renderer consumes the list of meshes to be rendered in the current frame fro
 
 | Original glxgears                    | Metal Gear                             | Steel Gear                             | Rusty Gear                                   |
 | ------------------------------------ | -------------------------------------- | -------------------------------------- | -------------------------------------------- |
-| <img src="glremix/og-gears-gif.gif"> | <img src="glremix/new-gears1-gif.gif"> | <img src="glremix/new-gears2-gif.gif"> | <img src="glremix/new-gears3-color-gif.gif"> |
+| <img src="/glremix/og-gears-gif.gif"> | <img src="/glremix/new-gears1-gif.gif"> | <img src="/glremix/new-gears2-gif.gif"> | <img src="/glremix/new-gears3-color-gif.gif"> |
 
 <p align="center">Asset Replacement in glxgears</p>
 
 <p align="center">
-    <img src="glremix/asset-replacement-gltron-gif.gif" width="600"/> 
+    <img src="/glremix/asset-replacement-gltron-gif.gif" width="600"/> 
     <p align="center">Visibility Toggle and Asset Replacement in GLtron</p>
 </p>
 

@@ -5,6 +5,7 @@ import { ProjectScene } from './scenes/ProjectScene'
 import { AboutScene } from './scenes/AboutScene'
 import { WorldHtml } from './WorldHtml'
 import { PageManager } from './PageManager'
+import { Router } from './Router'
 
 const app = new App()
 
@@ -31,6 +32,7 @@ app.register('about', aboutScene)
 
 const worldHtml = new WorldHtml(app)
 const pageManager = new PageManager(app)
+const router = new Router(app) // reads app.scenes/app.pages, so built after both
 
 // ProjectScene's/AboutScene's authored bounds above assume the project grid
 // fits in the 18-unit gap budgeted for it — true on desktop, but the grid's
@@ -85,18 +87,54 @@ aboutScene.label.addEventListener('synccomplete', relayout)
 document.fonts.ready.then(relayout) // custom fonts can shift card text height, and therefore grid height
 relayout()
 
+// Router.boot() needs ProjectScene's/AboutScene's bounds already reflecting
+// their real rendered content height (see anchorY on both scenes) — both
+// stay null until each scene's troika label finishes its own async layout,
+// so booting off the synchronous relayout() above alone can read
+// still-unextended bounds. That's not just a wrong initial camera Y: a
+// stale AboutScene.bounds can still claim ownership of whatever Y
+// ProjectScene's own target resolves to (Camera.boundsCheck() runs every
+// frame off live bounds), which visibly flashes into About before the next
+// real relayout() corrects it — e.g. a fresh load of /project landing in
+// AboutScene's color for a frame. Wait for both labels' first sync (or a
+// timeout, so a stalled font/layout can never strand routing entirely),
+// re-run relayout() once more immediately before booting.
+function whenSynced(label) {
+  return new Promise((resolve) =>
+    label.addEventListener('synccomplete', resolve, { once: true }),
+  )
+}
+const labelsReady = Promise.all([
+  whenSynced(projectScene.label),
+  whenSynced(aboutScene.label),
+])
+const bootTimeout = new Promise((resolve) => setTimeout(resolve, 3000))
+const booted = Promise.race([labelsReady, bootTimeout]).then(() => {
+  relayout()
+  router.boot()
+  // landed directly on a project's detail page (a deep link) — also wait
+  // for its write-up to actually finish fetching (see Page.ready), so the
+  // loading screen doesn't lift off a page whose body hasn't rendered yet.
+  // Bounded by the same overall timeout below regardless of how long this takes.
+  return app.pages.active?.ready
+})
+
 // reveal the site once it's actually ready to be looked at, instead of
 // leaving #loading-screen's cover over whatever's underneath the instant
 // index.html itself parses — waits on the custom fonts (avoids a flash of
-// fallback-font nav/labels right as it fades in) and two rAFs deep (the
-// standard trick for "the browser has actually painted a frame", not just
-// "we called renderer.render() once") so the WebGL background is already
-// drawn, not blank, the moment it's revealed. Capped with a timeout so a
-// stalled font load can never strand the page behind a black screen.
+// fallback-font nav/labels right as it fades in), on the initial route
+// having actually landed (see `booted` above — otherwise a deep link could
+// reveal a frame of the wrong scene before Router.boot() cuts over), and
+// two rAFs deep (the standard trick for "the browser has actually painted a
+// frame", not just "we called renderer.render() once") so the WebGL
+// background is already drawn, not blank, the moment it's revealed. Capped
+// with a timeout so a stalled font/label load can never strand the page
+// behind a black screen.
 const loadingScreen = document.querySelector('#loading-screen')
 if (loadingScreen) {
   const ready = Promise.all([
     document.fonts.ready,
+    booted,
     new Promise((resolve) =>
       requestAnimationFrame(() => requestAnimationFrame(resolve)),
     ),

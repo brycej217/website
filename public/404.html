@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Bryce Joseph</title>
+        <script>
+            // GitHub Pages has no server-side rewrites, so a hard refresh or a
+            // typed-in URL at a nested path (e.g. /project/vulkan-engine) lands
+            // here instead of index.html. Encode the real path into a query
+            // string and redirect to the root — index.html's own inline script
+            // decodes it and restores the real path via history.replaceState
+            // before the app's router ever runs, so this hop is invisible.
+            location.replace(
+                '/?redirect=' +
+                    encodeURIComponent(
+                        location.pathname + location.search + location.hash,
+                    ),
+            )
+        </script>
+    </head>
+    <body></body>
+</html>

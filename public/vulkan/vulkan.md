@@ -1,4 +1,4 @@
-![gif](vulkan/vulkan.gif)
+![gif](/vulkan/vulkan.gif)
 
 # Overview
 

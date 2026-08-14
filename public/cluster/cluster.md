@@ -12,7 +12,7 @@ Most of the conceptual understanding of this project and various implementation 
 
 Clustered lighting is the idea of dividing our view space into different 3D volumes. We can then determine which lights occupy that volume. Then for each vertex, we can determine which volume it falls into and light it with the lights that we had found to be in that volume. This is a much better alternative than naively iterating over the entire light list in the scene, especially when a scene contains a significant number of lights. For this implementation, we determine our x and y bounds by our screen space (pixel) coordinates, then for the z we perform logarithmic slicing according to the near and far planes of the view space. Essentially, this causes a higher concentration of slices closer to the view port, which leads to more effective buckets. Below is what my z slices ended up looking like:
 
-![](cluster/slices.png)
+![](/cluster/slices.png)
 
 To get our clusters, we run a compute shader per cluster index. Based on this index and the number of clusters we wish per axis, we can determine the minimum and maximum points of the axis-aligned bounding box that will represent the cluster. These aabb's are converted into view space. Based on this, we take a light's view space position, its radius, and perform a sphere-box intersection test to determine if it falls into the cluster. Then in our fragment shader, given a fragment position, we can determine which cluster it falls into, then calculate lighting based on those lights.
 
@@ -23,11 +23,11 @@ computation if for example these meshes are drawn over. By instead writing separ
 
 <table width="100%">
   <tr>
-    <td width="50%"><img src="cluster/pos.png" style="width:100%;"/></td>
-    <td width="50%"><img src="cluster/normal.png" style="width:100%;"/></td>
+    <td width="50%"><img src="/cluster/pos.png" style="width:100%;"/></td>
+    <td width="50%"><img src="/cluster/normal.png" style="width:100%;"/></td>
   </tr>
   <tr>
-    <td colspan="2" align="center"><img src="cluster/diffuse.png" style="width:50%;"/></td>
+    <td colspan="2" align="center"><img src="/cluster/diffuse.png" style="width:50%;"/></td>
   </tr>
 </table>
 
@@ -35,11 +35,11 @@ computation if for example these meshes are drawn over. By instead writing separ
 
 Analysis was performed on the Sponza scene, with point lights of radius 2.
 
-![](cluster/naive.png)
+![](/cluster/naive.png)
 
 First let's briefly discuss the naive implementation. This sees us looping over every light in the scene, which as we can see from the chart above, does not scale well, even with relatively low numbers of lights (from 500 to 2500). Quite clearly, and as we will see below, this implementation does not perform or scale well, and is essentially unable to even render the higher numbers of lights (10000 - 70000) that I will be using to compare the forward+ and deffered methods.
 
-![](cluster/forward.png)
+![](/cluster/forward.png)
 
 Now, we can see the forward+ vs deferred fps scaling with the number of lights. As we can see, the clustered deferred implementation performed the best, being an average of 16.82% faster across all iterations. This makes sense, as we are able to get rid of redundant lighting calculations with the deffered method, which is especially important in scenes with high light counts such as this. Now a potential reason for the performance decreases falling off as the number of lights increases is that we set a max light per cluster value, thus, it is likely that at high light counts, more clusters are reaching this maximum light count, which is why the performance dropoff fades.
 

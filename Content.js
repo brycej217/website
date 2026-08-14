@@ -13,7 +13,7 @@ export const content = [
   {
     id: 'glremix',
     title: 'glRemix',
-    md: 'glremix/gl.md',
+    md: '/glremix/gl.md',
     tech: ['C++', 'DX12', 'OpenGL', 'HLSL'],
     links: [
       { label: 'GitHub', url: 'https://github.com/glRemix/glRemix' },
@@ -26,7 +26,7 @@ export const content = [
   {
     id: 'nptracer',
     title: 'NPTracer',
-    md: 'nptracer/np.md', // full write-up, rendered from public/np.md — see Page.js
+    md: '/nptracer/np.md', // full write-up, rendered from public/np.md — see Page.js
     tech: ['C++', 'Vulkan', 'Slang', 'Houdini'],
     links: [
       { label: 'GitHub', url: 'https://github.com/brycej217/nptracer' },

@@ -14,41 +14,39 @@ export class PageManager {
     this.outlineEl = document.querySelector('#page-nav')
     this.backEl = document.querySelector('#page-back')
 
-    // resolved at click time, not cached here — AboutScene.position.y can
-    // shift after this constructor runs (see main.js's relayout(), which
-    // pushes it down to clear a tall project grid), and a target cached
-    // before that shift would teleport the camera to where "about" used to
-    // be instead of where it actually ended up
-    const navTargets = {
-      home: () => app.scenes.home.position.y,
-      projects: () => app.scenes.project.position.y + 5,
-      about: () => app.scenes.about.position.y + 1,
-    }
-    for (const [id, getY] of Object.entries(navTargets)) {
-      document.querySelector(`#${id}`)?.addEventListener('click', (e) => {
+    // target scene resolved at click time by Router.go(), not cached here —
+    // AboutScene.position.y can shift after this constructor runs (see
+    // main.js's relayout(), which pushes it down to clear a tall project
+    // grid), and a target cached before that shift would teleport the
+    // camera to where "about" used to be instead of where it actually ended up
+    const navTargets = { home: 'home', projects: 'project', about: 'about' }
+    for (const [elId, scene] of Object.entries(navTargets)) {
+      document.querySelector(`#${elId}`)?.addEventListener('click', (e) => {
         e.preventDefault()
-        const y = getY()
         // fade the sidebar out *before* the wipe starts, not mid-transition
         // — see hideOutlineNow()
         this.hideOutlineNow()
-        this.app.transition(() => {
-          this.close()
-          this.app.camera.teleport(y)
-        }, y)
+        this.app.router.navigate(scene)
       })
     }
 
-    // back button — returns to wherever the camera was before this page was
-    // opened (storedY), same wipe transition as the other nav links
+    // back button — goes through the browser's own session history (rather
+    // than transitioning directly) so it behaves identically to the
+    // browser's back button; Router's popstate handler does the actual
+    // close()+teleport, landing on storedY same as before
     this.backEl?.addEventListener('click', (e) => {
       e.preventDefault()
       if (!this.active) return
       this.hideOutlineNow()
-      this.app.transition(() => this.close(), this.storedY)
+      history.back()
     })
   }
 
-  open(id) {
+  // `showBack` is false only when ProjectScene.openProject() landed here via
+  // Router.boot()'s instant path (a deep link/hard refresh) — there's no
+  // in-app history behind that, so the button (which just calls
+  // history.back()) would otherwise send a click straight out of the site
+  open(id, { showBack = true } = {}) {
     // tell app that we are in page mode and store y
     this.app.inProject = true
     this.app.currScene = null
@@ -61,7 +59,7 @@ export class PageManager {
     this.active?.show()
     // sidebar reveal is gated behind armOutlineReveal() — see there
     this.outlineArmed = false
-    this.backEl?.classList.add('visible')
+    this.backEl?.classList.toggle('visible', showBack)
   }
 
   close() {

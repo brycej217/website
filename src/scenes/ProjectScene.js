@@ -10,7 +10,7 @@ const projects = [
     id: 'glremix',
     name: 'glRemix',
     subtitle: 'A DX12 remastering platform for legacy OpenGL games.',
-    image: 'glremix/glremix.gif',
+    image: '/glremix/glremix.gif',
     color: new THREE.Vector3(0.21, 0.18, 0.37),
   },
   {
@@ -18,14 +18,14 @@ const projects = [
     name: 'NPTracer',
     subtitle:
       'A Vulkan pathtracer enabling simultaneous PBR and NPR stylization in 3D scenes.',
-    image: 'nptracer/np.gif',
+    image: '/nptracer/np.gif',
     color: new THREE.Vector3(0.18, 0.22, 0.37),
   },
   {
     id: 'cuda-path-tracer',
     name: 'CUDA Path Tracer',
     subtitle: 'A GPU-accelerated Monte Carlo path tracer written in CUDA.',
-    image: 'cuda/cuda.gif',
+    image: '/cuda/cuda.gif',
     color: new THREE.Vector3(0.37, 0.32, 0.18),
   },
   {
@@ -33,14 +33,14 @@ const projects = [
     name: 'Clustered Renderer',
     subtitle:
       'A real-time WebGPU renderer implementing Forward+ and Clustered Deferred lighting.',
-    image: 'cluster/cluster.gif',
+    image: '/cluster/cluster.gif',
     color: new THREE.Vector3(0.37, 0.18, 0.28),
   },
   {
     id: 'vulkan-engine',
     name: 'Vulkan Engine',
     subtitle: 'A real-time game engine made with Vulkan.',
-    image: 'vulkan/vulkan.gif',
+    image: '/vulkan/vulkan.gif',
     color: new THREE.Vector3(0.1, 0.1, 0.1),
   },
 ]
@@ -215,14 +215,7 @@ export class ProjectScene extends Scene {
       card.appendChild(subtitle)
 
       card.addEventListener('click', () =>
-        this.app.transition(
-          () => this.projectClick(proj.id),
-          -100,
-          proj.color,
-          // sidebar only reveals once the wipe has actually finished — see
-          // PageManager.armOutlineReveal()
-          () => this.app.pages.armOutlineReveal(),
-        ),
+        this.app.router.navigate('project', proj.id),
       )
 
       grid.appendChild(card)
@@ -256,10 +249,51 @@ export class ProjectScene extends Scene {
     images.forEach((img) => io.observe(img))
   }
 
-  projectClick(id) {
+  // finds the project `id` refers to and opens its detail page — the wipe
+  // transition + accent color a card click plays, or (instant: true) an
+  // immediate cut with no wipe, for landing on a deep-linked/refreshed URL
+  // that was never actually on screen (see Router.boot()). Returns whether
+  // `id` resolved to a real project, so Router can fall back to the grid
+  // for an unknown/removed id.
+  openProject(id, { instant = false } = {}) {
+    const proj = projects.find((p) => p.id === id)
+    if (!proj) return false
+
+    if (instant) {
+      this.projectClick(id, { showBack: false })
+      // App.register('home', ...) unconditionally kicks off a 2s gsap tween
+      // of this same uniform toward home's orange the instant the app boots
+      // (see HomeScene.onEnter()), regardless of what URL was actually
+      // requested. A plain .copy() below doesn't register as a gsap tween,
+      // so without killing it first that still-in-flight tween keeps
+      // overwriting this snap on every subsequent frame, and the color
+      // settles back on home's orange once it finishes — not project's own.
+      gsap.killTweensOf(this.app.uniforms.color.value)
+      this.app.uniforms.color.value.copy(proj.color)
+      this.app.pages.armOutlineReveal()
+      return true
+    }
+
+    this.app.transition(
+      () => this.projectClick(id),
+      -100,
+      proj.color,
+      // sidebar only reveals once the wipe has actually finished — see
+      // PageManager.armOutlineReveal()
+      () => this.app.pages.armOutlineReveal(),
+    )
+    return true
+  }
+
+  // `showBack` is false only for Router.boot()'s instant path (a deep
+  // link/hard refresh) — there's no in-app history to actually go back to
+  // in that case, so showing the button would let a click send the visitor
+  // out of the site entirely via history.back() (see PageManager's back
+  // button, which now just delegates to that) instead of anywhere useful.
+  projectClick(id, { showBack = true } = {}) {
     // teleport camera to the start
     this.onExit()
-    this.app.pages.open(id)
+    this.app.pages.open(id, { showBack })
   }
 
   blobUpdate(delta) {

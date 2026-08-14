@@ -39,24 +39,24 @@ on other parts of the project outside of file parsing logic.
 
 ## Texture Mapping
 
-![](cuda/alltex.png)
+![](/cuda/alltex.png)
 
 Texture mapping is a common technique for adding realism to objects in a scene. This path tracer takes advantage of 3 types of texture mapping, diffuse, normal, and roughness mapping, all 3 of which we can visualize respectively below:
 
 <table width="100%">
   <tr>
-    <td width="50%"><img src="cuda/notex.png" style="width:100%;"/></td>
-    <td width="50%"><img src="cuda/difftex.png" style="width:100%;"/></td>
+    <td width="50%"><img src="/cuda/notex.png" style="width:100%;"/></td>
+    <td width="50%"><img src="/cuda/difftex.png" style="width:100%;"/></td>
   </tr>
   <tr>
-    <td width="50%"><img src="cuda/normal.png" style="width:100%;"/></td>
-    <td width="50%"><img src="cuda/roughness.png" style="width:100%;"/></td>
+    <td width="50%"><img src="/cuda/normal.png" style="width:100%;"/></td>
+    <td width="50%"><img src="/cuda/roughness.png" style="width:100%;"/></td>
   </tr>
 </table>
 
 ## Imperfect Specular Reflection
 
-![](cuda/impfspec.png)  
+![](/cuda/impfspec.png)  
 This path tracer utilizes roughness by calculating a specular reflection vector and a diffuse reflection vector (sample from a cosine hemisphere), and mixes between these two based on the roughness of the material.
 This provides a convincing imperfect specular reflection affect without PBR. Above you can see roughness values varying from 0.0 to 1.0 across the grid.
 
@@ -64,12 +64,12 @@ This provides a convincing imperfect specular reflection affect without PBR. Abo
 
 <table width="100%">
   <tr>
-    <td width="50%"><img src="cuda/env1.png" style="width:100%;"/></td>
-    <td width="50%"><img src="cuda/env2.png" style="width:100%;"/></td>
+    <td width="50%"><img src="/cuda/env1.png" style="width:100%;"/></td>
+    <td width="50%"><img src="/cuda/env2.png" style="width:100%;"/></td>
   </tr>
   <tr>
-    <td width="50%"><img src="cuda/env3.png" style="width:100%;"/></td>
-    <td width="50%"><img src="cuda/env4.png" style="width:100%;"/></td>
+    <td width="50%"><img src="/cuda/env3.png" style="width:100%;"/></td>
+    <td width="50%"><img src="/cuda/env4.png" style="width:100%;"/></td>
   </tr>
 </table>
 
@@ -80,8 +80,8 @@ as well we can provide what is essentially a global light source.
 
 <table width="100%">
   <tr>
-    <td width="50%"><img src="cuda/dof2.png" style="width:100%;"/></td>
-    <td width="50%"><img src="cuda/dof3.png" style="width:100%;"/></td>
+    <td width="50%"><img src="/cuda/dof2.png" style="width:100%;"/></td>
+    <td width="50%"><img src="/cuda/dof3.png" style="width:100%;"/></td>
   </tr>
 </table>
 
@@ -89,18 +89,18 @@ To simulate more traditional cameras, we can mimic the effect of a lens by sampl
 
 Here's what the above scene looks like without depth of field effects:
 
-![](cuda/dof1.png)
+![](/cuda/dof1.png)
 
 ## Stochastic Sampled Antialiasing
 
-![](cuda/lizard.png)
+![](/cuda/lizard.png)
 
 Antialising in a path tracer is essentially free as we can simply jitter our rays within the pixel each iteration. Thus by adding some noise to our ray directions each iteration we can achieve antialiasing.
 
 # Performance
 
-![](cuda/open.png)
-![](cuda/closed.png)
+![](/cuda/open.png)
+![](/cuda/closed.png)
 
 Analysis will be performed on the above scenes involving the Stanford dragon, here on dubbed as the "Dragon Box". The scene contains 20,364 triangles, and will serve as the benchmark scene for performance analysis of the path tracer's
 various features. The path tracer was tuned to a resolution of 800 x 800 (for 640,000 rays) with a trace depth of 8. BVH was enabled for all performance comparisons, otherwise all other visual and performance features
@@ -112,8 +112,8 @@ as well as kernel runtime analysis using NSight Compute, the results of which wi
 
 <table width="100%">
   <tr>
-    <td width="50%"><img src="cuda/iterpf.png" style="width:100%;"/></td>
-    <td width="50%"><img src="cuda/kernelpf.png" style="width:100%;"/></td>
+    <td width="50%"><img src="/cuda/iterpf.png" style="width:100%;"/></td>
+    <td width="50%"><img src="/cuda/kernelpf.png" style="width:100%;"/></td>
   </tr>
 </table>
 
@@ -121,14 +121,14 @@ We will also be discussing the path tracer's performance in closed scenes, which
 
 <table width="100%">
   <tr>
-    <td width="50%"><img src="cuda/iterclosed.png" style="width:100%;"/></td>
-    <td width="50%"><img src="cuda/kernclosed.png" style="width:100%;"/></td>
+    <td width="50%"><img src="/cuda/iterclosed.png" style="width:100%;"/></td>
+    <td width="50%"><img src="/cuda/kernclosed.png" style="width:100%;"/></td>
   </tr>
 </table>
 
 ## Bounding Volume Hierarchies
 
-![](cuda/bvh.png)
+![](/cuda/bvh.png)
 
 To determine which geometries a ray hits, a naive path tracer would check the ray against all geometries in the scene and return the closest hit. This is extremely costly, especially when a scene has
 a lot of geometry. A solution to this is to split up the space into a hierarchichal data structure. Essentially, we can group geometries into enclosing volumes. A ray that does not intersect the enclosing volume could
@@ -139,7 +139,7 @@ Ths particular implementation determine a node as terminal if it contained less 
 This path tracer's particular implementation of a BVH utilized details from both [Jacco Bikker's blog](https://jacco.ompf2.com/2022/04/13/how-to-build-a-bvh-part-1-basics/) and [Peter Shirley's Ray Tracing: The Next Week](https://www.realtimerendering.com/raytracing/Ray%20Tracing_%20The%20Next%20Week.pdf). The above visualization
 is courtesy of [stororokw](https://www.youtube.com/watch?v=YkxBEEJTFmI) on YouTube.
 
-![](cuda/bvhana.png)
+![](/cuda/bvhana.png)
 
 The above analysis looks somewhat silly, but it illustrates that bounding volume hierarchies are essentially required for any non-trivial scene. I was almost unable to interact with the path tracer with it disabled,
 iterations taking an unacceptable over 8.7 seconds to execute. As we can see, most of this runtime comes from the compute intersections kernel as expected, shade intersection and ray generation taking the same amount of time as they would with it enabled. Thus,
@@ -147,7 +147,7 @@ BVH provides the most significant performance speedup, improving performance by 
 
 ## Early Termination
 
-![](cuda/streamcompact.png)
+![](/cuda/streamcompact.png)
 
 When determining intersections for rays, it is quite common that some rays will not intersect any geometry. However, this could happen at any bounce depth, i.e. some rays will be done sooner than
 others at any point during our path tracing function. The solution is to simply compact the array of active paths to reduce the kernel launch size via stream compaction, a diagram of which can be seen above.
@@ -172,8 +172,8 @@ Below is an analysis of both total iteration runtime as well as kernel runtime a
 
 <table width="100%">
   <tr>
-    <td width="50%"><img src="cuda/itervis.png" style="width:100%;"/></td>
-    <td width="50%"><img src="cuda/kernvis.png" style="width:100%;"/></td>
+    <td width="50%"><img src="/cuda/itervis.png" style="width:100%;"/></td>
+    <td width="50%"><img src="/cuda/kernvis.png" style="width:100%;"/></td>
   </tr>
 </table>
 
@@ -211,4 +211,4 @@ Thank you as well to the Sketchfab artists
 [znkim](https://sketchfab.com/zinookeem) for their [Usagi](https://sketchfab.com/3d-models/usagi-chiikawa-4353fc3c1f664784bfd33608c6cff125) model, [abhayexe](https://sketchfab.com/abhayexe) for their [Chinese Statue VR](https://sketchfab.com/3d-models/chinese-statue-vr-a5089f8d5d2045ef9d1f4b25176a84c6) model,
 and [JHS-Art](https://sketchfab.com/Nidhoeggr) for their [Dragon Wacom](https://sketchfab.com/3d-models/dragon-wacom-penholder-or-tabletop-figure-9fd9fb3d4bc64c2fb56640ab620b72f4) model.
 
-![](cuda/superdrag.png)
+![](/cuda/superdrag.png)

@@ -20,7 +20,10 @@ export class Page {
     this.el.style.display = 'none'
     document.querySelector('#pages').appendChild(this.el)
 
-    this.loadBody()
+    // kept (not just fire-and-forgotten) so a deep link straight to this
+    // page (see Router.boot()/main.js) can wait on it before lifting the
+    // loading screen, instead of revealing an empty body mid-fetch
+    this.ready = this.loadBody()
   }
 
   build() {
@@ -138,10 +141,19 @@ export class Page {
   async loadBody() {
     if (this.data.md) {
       try {
-        const res = await fetch(this.data.md)
+        // resolve against the site root, not document.baseURI — a few
+        // Content.js entries still write this path without a leading slash
+        // from before project pages had a real URL of their own (see
+        // Router.js); document.baseURI is now that page's own nested route
+        // (e.g. /project/nptracer) whenever this is a deep link/hard
+        // refresh, and a relative fetch against that 404s instead of
+        // reaching public/'s actual root-served file.
+        const mdUrl = new URL(this.data.md, location.origin + '/')
+        const res = await fetch(mdUrl)
         if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
         const md = await res.text()
         this.body.innerHTML = marked.parse(md)
+        this.resolveRelativeUrls(mdUrl)
         this.wrapSections()
         this.buildOutline()
         return
@@ -151,6 +163,28 @@ export class Page {
     }
 
     this.body.textContent = this.data.description ?? ''
+  }
+
+  // several write-ups' own markdown source references sibling images with a
+  // path relative to the .md file itself (e.g. "cuda/foo.png"), authored
+  // back when the site was always served from `/` — the browser would
+  // otherwise resolve those against document.baseURI (the *page's* current
+  // URL, e.g. /project/cuda-path-tracer on a deep link/hard refresh — see
+  // loadBody()'s comment above) instead of where the .md file actually
+  // lives. Rewrite them once, right after parsing, against the .md file's
+  // own directory — marked itself deliberately dropped automatic base-url
+  // resolution, so this has to happen as a post-pass over the parsed DOM.
+  resolveRelativeUrls(mdUrl) {
+    const base = mdUrl.href.slice(0, mdUrl.href.lastIndexOf('/') + 1)
+
+    for (const el of this.body.querySelectorAll('img[src]')) {
+      el.src = new URL(el.getAttribute('src'), base).href
+    }
+    for (const el of this.body.querySelectorAll('a[href]')) {
+      const href = el.getAttribute('href')
+      if (href.startsWith('#')) continue // same-page anchor, not a path
+      el.href = new URL(href, base).href
+    }
   }
 
   // groups the flat sequence of elements marked.parse() produces into nested
