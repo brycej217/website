@@ -15,6 +15,10 @@ export class App extends Emitter {
     // device pixel ratio — see the comment in resize() for why
     this.MAX_RENDER_HEIGHT = 1080
 
+    // upper bound on the per-frame delta fed to 'update' listeners — see the
+    // comment in update() for why
+    this.MAX_DELTA = 0.1
+
     // canvas selection and renderer setup
     const canvas = document.querySelector('#viewport')
     this.renderer = new THREE.WebGLRenderer({ antialias: true, canvas })
@@ -237,7 +241,19 @@ export class App extends Emitter {
   update() {
     // get delta time since last frame (in seconds)
     this.timer.update()
-    const delta = this.timer.getDelta()
+    // backgrounding the tab doesn't pause rAF so much as starve it — it can
+    // go unfired for the entire time the tab is hidden, so the first frame
+    // back gets a delta of however long that was (seconds, sometimes
+    // minutes). Every per-frame system that scales by delta (blob sim speed
+    // — see ProjectScene/HomeScene/AboutScene's blobUpdate(), this.time
+    // driving the shader's light rotation, ...) would otherwise take that
+    // one frame's worth of "catch-up" as a single huge step — a blob sim
+    // reads that as teleporting way outside its wrap bounds, which is what
+    // the reported "balls escaping" turned out to be, not the raymarcher.
+    // Clamping here (rather than pausing on visibilitychange) means the
+    // affected systems still see one bounded, if larger-than-usual, frame
+    // instead of a dead stop-and-resume.
+    const delta = Math.min(this.timer.getDelta(), this.MAX_DELTA)
     this.time += delta
 
     // fps tracker — refresh the readout a few times a second instead of

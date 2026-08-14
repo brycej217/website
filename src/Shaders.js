@@ -230,65 +230,22 @@ export class Blobs {
         }
 
        float t = max(tb.x, 0.0);
-        // grazing/near-tangent rays are the pathology: a shallow-angle ray can
-        // stay just outside every blob for a long stretch, taking tiny SDF
-        // values without ever hitting the fixed epsilon, and crawl for the
-        // whole step budget. MAX_DIST is an unconditional distance cap (on top
-        // of the AABB exit) that bails such rays out to background instead of
-        // burning steps on them.
-        const float MAX_DIST = 60.0;
-        float tMax = min(tb.y, MAX_DIST); // finite backstop in case the box is ever degenerate
+        float tMax = tb.y; // finite backstop in case the box is ever degenerate
         float d = 0.0;
         vec3 p;
-
-        // pixel footprint at unit distance — uv spans [-1, 1] over resolution.y
-        // pixels and rd is built from vec3(uv, 1), so this approximates the
-        // angular size of one pixel, used below to relax the hit epsilon with
-        // distance instead of a fixed tiny threshold
-        float pixelRadius = 1.0 / resolution.y;
-        float eps = 0.001;
-
-        // over-relaxed sphere tracing (Keinert et al. 2014, "Enhanced Sphere
-        // Tracing"): step by omega*d instead of d — converges in meaningfully
-        // fewer iterations on typical scenes. omega > 1 risks stepping past a
-        // surface where two consecutive conservative spheres don't overlap; when
-        // that's detected (sorFail) we retreat by the overshoot and drop back to
-        // a plain, non-relaxed step until the next reliable stride.
-        float omega = 1.5;
-        float prevRadius = 0.0;
-        float stepLength = 0.0;
 
         // raymarching
         for (int i = 0; i < 80; ++i)
         {
             p = ro + rd * t; // position along ray (based on distance traveled)
             d = map(p); // current distance to the scene
-
-            bool sorFail = omega > 1.0 && (d + prevRadius) < stepLength;
-            if (sorFail)
-            {
-                stepLength -= omega * stepLength; // retreat by the overshoot
-                omega = 1.0;
-            }
-            else
-            {
-                stepLength = d * omega;
-            }
-            prevRadius = d;
-
-            // adaptive epsilon: as t grows, a grazing ray that's merely close
-            // (rather than converging to 0) is accepted as a hit once it's
-            // within a sub-pixel margin — this is what actually stops the
-            // crawl, since a fixed 0.001 threshold is what a tangent ray can
-            // spend its whole budget failing to reach
-            eps = max(0.001, pixelRadius * t);
-            if (!sorFail && d < eps) break;
-            t += stepLength;
-            if (t > tMax) break;  // left the box / past the distance cap
+            if (d < 0.001) break;
+            t += d;
+            if (t > tMax) break;  // left the box
         }
 
         // if surface was hit perform lighting calculations
-        if (d < eps)
+        if (d < 0.001)
         {
             vec3 lightDir = vec3(cos(time) * 0.5, sin(time) * 0.5, cos(time) * 0.5);
             vec3 lightCol = vec3(1.0);

@@ -9,7 +9,18 @@ export class HomeScene extends Scene {
     super(app, opts)
 
     // color setup
-    this.color = new THREE.Vector3(0.97, 0.24, 0.05)
+
+    /*
+    this.color = new THREE.Vector3(0.97, 0.62, 0.05) // amber
+    this.color = new THREE.Vector3(0.97, 0.05, 0.05) // red
+    this.color = new THREE.Vector3(0.05, 0.35, 0.97) // blue
+    this.color = new THREE.Vector3(0.35, 0.05, 0.97) // indigo
+    this.color = new THREE.Vector3(0.97, 0.05, 0.97) // magenta
+    this.color = new THREE.Vector3(0.97, 0.05, 0.62) // pink
+    this.color = new THREE.Vector3(0.05, 0.7, 0.97) // cyan-blue*/
+    this.color = new THREE.Vector3(0.97, 0.24, 0.05) // orange (original)
+    /*
+     */
     this.app.uniforms.color.value.copy(this.color) // set initial color
 
     // blob setup — slot allocation makes this sim run persistently alongside other scenes

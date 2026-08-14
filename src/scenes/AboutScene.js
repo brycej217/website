@@ -8,7 +8,7 @@ export class AboutScene extends Scene {
     super(app, opts)
 
     // color setup
-    this.color = new THREE.Vector3(0.35, 0.05, 0.97)
+    this.color = new THREE.Vector3(0.35, 0.05, 0.97) // indigo
 
     // this scene's world-Y as originally authored (see main.js) — reposition()
     // below can push it further down to clear a project grid taller than the

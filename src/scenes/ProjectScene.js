@@ -52,7 +52,7 @@ export class ProjectScene extends Scene {
     super(app, opts)
 
     // color setup
-    this.color = new THREE.Vector3(0.97, 0.62, 0.05)
+    this.color = new THREE.Vector3(0.05, 0.35, 0.97) // blue
 
     const name = this.add(
       'label',
