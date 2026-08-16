@@ -150,3 +150,25 @@ if (loadingScreen) {
     )
   })
 }
+
+// About panel's email link copies the address instead of navigating —
+// href stays a plain mailto: (so right-click "copy email address"/middle-
+// click-open-in-new-tab still do something sensible), the click itself is
+// intercepted and swaps the label to a brief "Copied!" confirmation
+const emailLink = document.querySelector('#email-link')
+if (emailLink) {
+  const label = emailLink.textContent
+  const email = emailLink.href.replace(/^mailto:/, '')
+  let resetTimer = null
+
+  emailLink.addEventListener('click', (e) => {
+    e.preventDefault()
+    navigator.clipboard.writeText(email).then(() => {
+      clearTimeout(resetTimer)
+      emailLink.textContent = 'Copied!'
+      resetTimer = setTimeout(() => {
+        emailLink.textContent = label
+      }, 1500)
+    })
+  })
+}

@@ -187,7 +187,14 @@ export class Camera {
   onPointerMove(event) {
     if (!this.drag || event.pointerId !== this.drag.pointerId) return
 
-    const deltaPx = this.drag.startY - event.clientY
+    // dragging up (finger/pointer moving toward the top of the screen, i.e.
+    // event.clientY decreasing below startY) should scroll further into the
+    // site — same direction as a native touch scroll or a trackpad's
+    // "natural" scrolling — which means scrollTarget has to *decrease* (see
+    // onScroll: wheel-down, deltaY > 0, also decreases it). The previous
+    // startY - clientY had this backwards: dragging up produced a positive
+    // delta and scrolled back toward Home instead of further into the site.
+    const deltaPx = event.clientY - this.drag.startY
 
     // small dead zone before committing to a drag-scroll, so a plain tap or
     // click (a nav link, a project card, ...) still registers as one
@@ -202,9 +209,15 @@ export class Camera {
     // 1:1 with the drag, same as native touch scrolling — unlike
     // onScroll's hand-tuned `speed`, pixelsPerUnit() is the exact
     // px<->world-unit ratio WorldHtml itself scrolls by, so the content
-    // actually tracks the pointer instead of over/undershooting it
-    this.scrollTarget =
-      this.drag.startScroll + deltaPx / this.pixelsPerUnit()
+    // actually tracks the pointer instead of over/undershooting it.
+    // teleport() (not scrollTarget alone) so the camera's actual position
+    // snaps straight to the pointer every move instead of easing toward it
+    // like every other scroll source does (see update()'s tau) — that
+    // per-tick easing is for smoothing discrete wheel ticks/nav jumps, and
+    // layering it on top of an already-continuous, already-1:1 drag signal
+    // just reads as the content trailing behind your finger instead of
+    // gripping it, which is what actually made this feel slow.
+    this.teleport(this.drag.startScroll + deltaPx / this.pixelsPerUnit())
   }
 
   onPointerUp(event) {
